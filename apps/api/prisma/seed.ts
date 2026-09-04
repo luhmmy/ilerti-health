@@ -12,8 +12,10 @@ async function main() {
   const user = await prisma.user.create({
     data: {
       email: 'patient@ilerti.com',
-      name: 'Test Patient',
-      // Assuming a basic schema structure for demonstration
+      firstName: 'Test',
+      lastName: 'Patient',
+      passwordHash: '$2a$10$wN314o5L2n4BqZ7.mYkKDe1XgY4dE2fF1.rK6rO6kP9aC8hW0jR4a',
+      role: 'PATIENT',
     },
   });
 
