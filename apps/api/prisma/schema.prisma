@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  phone           String?        @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?
+  gender          String?
+  state           String?
+  city            String?
+  address         String?
+  role            String         @default("PATIENT") // PATIENT, DOCTOR, ADMIN
+  avatarUrl       String?
+  emailVerified   Boolean        @default(false)
+  phoneVerified   Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  doctor          Doctor?
+  healthProfile   HealthProfile?
+  healthRecords   HealthRecord[]
+  wellnessPlans   WellnessPlan[]
+  patientConsultations Consultation[] @relation("PatientConsultations")
+}
+
+model Doctor {
+  id                 String         @id @default(cuid())
+  userId             String         @unique
+  user               User           @relation(fields: [userId], references: [id])
+  mdcnNumber         String?        @unique
+  licenseNumber      String?
+  verificationStatus String         @default("PENDING") // PENDING, UNDER_REVIEW, VERIFIED, REJECTED, SUSPENDED
+  bio                String?
+  experienceYears    Int            @default(0)
+  consultationFee    Float          @default(0.0)
+  specialties        String[]
+  languages          String[]
+  rating             Float          @default(0.0)
+  totalConsultations Int            @default(0)
+  isAvailable        Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+
+  consultations      Consultation[] @relation("DoctorConsultations")
+}
+
+model HealthProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id])
+  bloodType            String?
+  heightCm             Float?
+  weightKg             Float?
+  chronicConditions    String[]
+  allergies            String[]
+  currentMedications   String[]
+  emergencyContactName String?
+  emergencyContactPhone String?
+  updatedAt            DateTime @updatedAt
+}
+
+model Facility {
+  id                 String   @id @default(cuid())
+  name               String
+  description        String?
+  type               String   // HOSPITAL, CLINIC, PHARMACY, LAB
+  address            String
+  state              String
+  city               String
+  phone              String
+  email              String?
+  website            String?
+  verificationStatus String   @default("PENDING")
+  services           String[]
+  createdAt          DateTime @default(now())
+}
+
+model Consultation {
+  id                String   @id @default(cuid())
+  patientId         String
+  patient           User     @relation("PatientConsultations", fields: [patientId], references: [id])
+  doctorId          String?
+  doctor            Doctor?  @relation("DoctorConsultations", fields: [doctorId], references: [id])
+  type              String   // CHAT, AUDIO, VIDEO
+  status            String   @default("PENDING") // PENDING, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  aiTriageSummary   String?
+  urgencyLevel      String?  // LOW, MEDIUM, HIGH, EMERGENCY
+  chiefComplaint    String?
+  doctorNotes       String?
+  scheduledAt       DateTime?
+  amountPaid        Float    @default(0.0)
+  paymentReference  String?
+  createdAt         DateTime @default(now())
+}
+
+model HealthRecord {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  recordType     String   // LAB_RESULT, PRESCRIPTION, IMAGING, GENERAL
+  title          String
+  content        String?
+  fileUrl        String?
+  isConfidential Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model WellnessPlan {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  planType     String   // MEAL, FITNESS, GENERAL
+  name         String
+  mealSchedule Json?
+  activityPlan Json?
+  reminders    Json?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model AiConversation {
+  id           String   @id @default(cuid())
+  userId       String?
+  sessionId    String
+  messages     Json
+  triageResult Json?
+  status       String   @default("ACTIVE") // ACTIVE, COMPLETED, ABANDONED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
