@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { 
   Home, 
   Layers, 
@@ -33,7 +34,10 @@ const NAV_ITEMS = [
 
 export function QuickNavDock() {
   const pathname = usePathname();
+  const { isAuthenticated } = useAuthStore();
   const [isOpen, setIsOpen] = useState(true);
+
+  if (!isAuthenticated) return null;
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center">

@@ -19,25 +19,23 @@ export function Header() {
     <header className="flex h-16 items-center justify-between px-6 border-b bg-white">
       <div className="flex items-center gap-6">
         <BrandLogo size="md" />
-        <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-navy-700">
-          <Link href="/ai" className="hover:text-primary-600 transition-colors flex items-center gap-1 font-semibold text-primary-700">
-            <span className="text-base">✨</span> AI Triage
-          </Link>
-          <Link href="/doctors" className="hover:text-primary-600 transition-colors">Doctors</Link>
-          <Link href="/facilities" className="hover:text-primary-600 transition-colors">Facilities</Link>
-          <Link href="/wellness" className="hover:text-primary-600 transition-colors">Wellness</Link>
-          <Link href="/pricing" className="hover:text-primary-600 transition-colors">Pricing</Link>
-          {isAuthenticated && (
-            <>
-              <Link href="/dashboard" className="hover:text-primary-600 transition-colors">Dashboard</Link>
-              <Link href="/profile" className="hover:text-primary-600 transition-colors font-medium text-teal-700">Profile</Link>
-              <Link href="/health" className="hover:text-primary-600 transition-colors">Records</Link>
-              {user?.role === "admin" && (
-                <Link href="/admin" className="hover:text-primary-600 transition-colors">Admin</Link>
-              )}
-            </>
-          )}
-        </nav>
+        {isAuthenticated && (
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-navy-700">
+            <Link href="/dashboard" className="hover:text-primary-600 transition-colors">Dashboard</Link>
+            <Link href="/ai" className="hover:text-primary-600 transition-colors flex items-center gap-1 font-semibold text-primary-700">
+              <span className="text-base">✨</span> AI Triage
+            </Link>
+            <Link href="/doctors" className="hover:text-primary-600 transition-colors">Doctors</Link>
+            <Link href="/facilities" className="hover:text-primary-600 transition-colors">Facilities</Link>
+            <Link href="/wellness" className="hover:text-primary-600 transition-colors">Wellness</Link>
+            <Link href="/pricing" className="hover:text-primary-600 transition-colors">Pricing</Link>
+            <Link href="/profile" className="hover:text-primary-600 transition-colors font-medium text-teal-700">Profile</Link>
+            <Link href="/health" className="hover:text-primary-600 transition-colors">Records</Link>
+            {user?.role === "admin" && (
+              <Link href="/admin" className="hover:text-primary-600 transition-colors">Admin</Link>
+            )}
+          </nav>
+        )}
       </div>
 
       <div className="flex items-center gap-4">

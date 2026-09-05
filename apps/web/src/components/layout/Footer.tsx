@@ -23,10 +23,10 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold text-navy-900 mb-4">Platform</h4>
             <ul className="space-y-3 text-sm text-navy-600">
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">AI Health Navigation</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Verified Doctors</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Healthcare Facilities</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Personalized Wellness</Link></li>
+              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">AI Health Navigation</Link></li>
+              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">Verified Doctors</Link></li>
+              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">Healthcare Facilities</Link></li>
+              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">Personalized Wellness</Link></li>
             </ul>
           </div>
 

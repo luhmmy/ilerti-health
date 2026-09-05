@@ -12,14 +12,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
 const HEALTH_JOURNEY_OPTIONS = [
-  { icon: Activity, title: "AI Symptom Checker", desc: "Interactive AI navigation & triage", color: "text-primary-500", bg: "bg-primary-50", href: "/ai" },
-  { icon: Stethoscope, title: "Find a Doctor", desc: "Book verified specialists", color: "text-blue-500", bg: "bg-blue-50", href: "/doctors" },
-  { icon: FileText, title: "Lab & Diagnostic Tests", desc: "Find accredited diagnostic labs", color: "text-purple-500", bg: "bg-purple-50", href: "/facilities" },
-  { icon: Pill, title: "Medication Reminders", desc: "Track doses & prescriptions", color: "text-accent-500", bg: "bg-accent-50", href: "/health/medications" },
-  { icon: Baby, title: "Maternal Care", desc: "Pregnancy & childcare plans", color: "text-pink-500", bg: "bg-pink-50", href: "/wellness/plans" },
-  { icon: HeartPulse, title: "Chronic Care", desc: "Diabetes & hypertension support", color: "text-red-500", bg: "bg-red-50", href: "/wellness/plans" },
-  { icon: Brain, title: "Mental Health", desc: "Therapy & clinical support", color: "text-indigo-500", bg: "bg-indigo-50", href: "/doctors?specialty=Psychiatry" },
-  { icon: Apple, title: "Nigerian Nutrition", desc: "Localized healthy meal plans", color: "text-orange-500", bg: "bg-orange-50", href: "/wellness/nutrition" },
+  { icon: Activity, title: "AI Symptom Checker", desc: "Interactive AI navigation & triage", color: "text-primary-500", bg: "bg-primary-50", href: "/signup" },
+  { icon: Stethoscope, title: "Find a Doctor", desc: "Book verified specialists", color: "text-blue-500", bg: "bg-blue-50", href: "/signup" },
+  { icon: FileText, title: "Lab & Diagnostic Tests", desc: "Find accredited diagnostic labs", color: "text-purple-500", bg: "bg-purple-50", href: "/signup" },
+  { icon: Pill, title: "Medication Reminders", desc: "Track doses & prescriptions", color: "text-accent-500", bg: "bg-accent-50", href: "/signup" },
+  { icon: Baby, title: "Maternal Care", desc: "Pregnancy & childcare plans", color: "text-pink-500", bg: "bg-pink-50", href: "/signup" },
+  { icon: HeartPulse, title: "Chronic Care", desc: "Diabetes & hypertension support", color: "text-red-500", bg: "bg-red-50", href: "/signup" },
+  { icon: Brain, title: "Mental Health", desc: "Therapy & clinical support", color: "text-indigo-500", bg: "bg-indigo-50", href: "/signup" },
+  { icon: Apple, title: "Nigerian Nutrition", desc: "Localized healthy meal plans", color: "text-orange-500", bg: "bg-orange-50", href: "/signup" },
 ];
 
 export default function Home() {
@@ -54,10 +54,10 @@ export default function Home() {
             <ScrollReveal delay={0.2}>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button size="xl" asChild className="w-full sm:w-auto shadow-lg shadow-primary-500/20 text-md">
-                  <Link href="/ai">✨ Start AI Symptom Checker</Link>
+                  <Link href="/signup">✨ Create Free Account</Link>
                 </Button>
                 <Button size="xl" variant="outline" asChild className="w-full sm:w-auto bg-white text-md">
-                  <Link href="/doctors">👨🏽‍⚕️ Consult a Doctor</Link>
+                  <Link href="/login">Sign In</Link>
                 </Button>
               </div>
             </ScrollReveal>
