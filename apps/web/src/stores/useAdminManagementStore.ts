@@ -131,7 +131,7 @@ export const useAdminManagementStore = create<AdminManagementStore>()(
       },
     }),
     {
-      name: 'ilerti-v5-users',
+      name: 'ilerti-v6-users',
     }
   )
 );

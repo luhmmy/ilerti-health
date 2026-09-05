@@ -66,7 +66,7 @@ export const useDoctorStore = create<DoctorStore>()(
       },
     }),
     {
-      name: 'ilerti-v5-doctors',
+      name: 'ilerti-v6-doctors',
     }
   )
 );

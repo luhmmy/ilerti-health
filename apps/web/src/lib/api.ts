@@ -9,7 +9,7 @@ export interface TriageResult {
   quotaNote?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+const API_URL = '/api';
 
 function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};

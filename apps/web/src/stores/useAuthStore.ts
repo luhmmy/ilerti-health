@@ -42,7 +42,7 @@ interface AuthState {
 if (typeof window !== 'undefined') {
   const allKeys = Object.keys(localStorage);
   allKeys.forEach((key) => {
-    if (key.startsWith('ilerti-') && !key.includes('-v5-')) {
+    if (key.startsWith('ilerti-') && !key.includes('-v6-')) {
       try {
         localStorage.removeItem(key);
       } catch {}
@@ -81,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
           return adminUser;
         }
 
-        // 2. Primary Source of Truth: Backend Database API Login
+        // 2. Authoritative Server Database API Login
         try {
           const data = await api.auth.login({ email: inputKey, password: inputPass });
           if (data && data.user) {
@@ -102,66 +102,14 @@ export const useAuthStore = create<AuthState>()(
               isAvailable: true,
             };
 
-            // Sync to local admin management store for offline/admin views
-            useAdminManagementStore.getState().addUser({
-              id: userObj.id,
-              fullName: userObj.name,
-              email: userObj.email || '',
-              phone: userObj.phone || '',
-              role: userObj.role,
-              status: 'active',
-              registeredAt: new Date().toISOString().split('T')[0],
-              location: `${userObj.cityOfPractice || 'Lagos'}, Nigeria`,
-              mdcnFolio: userObj.mdcnFolio,
-              specialty: userObj.specialty,
-              consultationsCount: 0,
-            });
-
             set({ user: userObj, token: data.access_token || 'auth-token', isAuthenticated: true, pendingEmailOrPhone: null });
             return userObj;
           }
+          throw new Error('This account does not exist in the database. Please create an account to sign in.');
         } catch (apiErr: any) {
-          const errMsg = apiErr?.message || '';
-          // If server returned an explicit validation/existence error, bubble it up directly!
-          if (
-            errMsg.includes('does not exist') ||
-            errMsg.includes('Invalid email') ||
-            errMsg.includes('Invalid password') ||
-            errMsg.includes('banned') ||
-            errMsg.includes('suspended')
-          ) {
-            throw new Error(errMsg);
-          }
+          const errMsg = apiErr?.message || 'Login failed. Please verify your credentials or register an account.';
+          throw new Error(errMsg);
         }
-
-        // 3. Fallback / Client Database Lookup for Offline Dev
-        const registeredUsers = useAdminManagementStore.getState().users;
-        const matchedUser = registeredUsers.find(
-          (u) => (u.email && u.email.toLowerCase() === inputKey) || (u.phone && u.phone.trim() === inputKey)
-        );
-
-        if (matchedUser) {
-          if (matchedUser.password && matchedUser.password !== inputPass) {
-            throw new Error('Incorrect password. Please verify and try again.');
-          }
-          const isDoc = matchedUser.role === 'doctor' || Boolean(matchedUser.mdcnFolio);
-          const loggedUser: User = {
-            id: matchedUser.id,
-            name: matchedUser.fullName,
-            email: matchedUser.email,
-            phone: matchedUser.phone,
-            role: isDoc ? 'doctor' : matchedUser.role,
-            specialty: matchedUser.specialty || (isDoc ? 'General Practice' : undefined),
-            mdcnFolio: matchedUser.mdcnFolio,
-            hospitalAffiliation: matchedUser.location,
-            verificationStatus: 'VERIFIED',
-            isAvailable: true,
-          };
-          set({ user: loggedUser, token: `token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
-          return loggedUser;
-        }
-
-        throw new Error('This account does not exist in the database. Please create an account to sign in.');
       },
 
       register: async (userData) => {
@@ -276,7 +224,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'ilerti-v5-auth',
+      name: 'ilerti-v6-auth',
       storage: createJSONStorage(() => localStorage),
     }
   )
