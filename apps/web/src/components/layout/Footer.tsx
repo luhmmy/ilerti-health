@@ -13,10 +13,10 @@ export function Footer() {
               A digital health ecosystem for lifelong, accessible and preventive healthcare. Know. Connect. Care. Prevent. Thrive.
             </p>
             <div className="flex items-center gap-4 text-navy-400">
-              <a href="#" className="hover:text-primary-600 transition-colors"><Twitter className="h-5 w-5" /></a>
-              <a href="#" className="hover:text-primary-600 transition-colors"><Facebook className="h-5 w-5" /></a>
-              <a href="#" className="hover:text-primary-600 transition-colors"><Instagram className="h-5 w-5" /></a>
-              <a href="#" className="hover:text-primary-600 transition-colors"><Linkedin className="h-5 w-5" /></a>
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors" title="Twitter / X"><Twitter className="h-5 w-5" /></a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors" title="Facebook"><Facebook className="h-5 w-5" /></a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors" title="Instagram"><Instagram className="h-5 w-5" /></a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors" title="LinkedIn"><Linkedin className="h-5 w-5" /></a>
             </div>
           </div>
 
@@ -34,19 +34,19 @@ export function Footer() {
             <h4 className="font-heading font-semibold text-navy-900 mb-4">Company</h4>
             <ul className="space-y-3 text-sm text-navy-600">
               <li><Link href="/about" className="hover:text-primary-600 transition-colors">About Us</Link></li>
-              <li><Link href="/about" className="hover:text-primary-600 transition-colors">Our Mission</Link></li>
-              <li><Link href="/community" className="hover:text-primary-600 transition-colors">Community Outreach</Link></li>
-              <li><a href="mailto:support@ilertihealth.site" className="hover:text-primary-600 transition-colors">Contact Support</a></li>
+              <li><Link href="/careers" className="hover:text-primary-600 transition-colors">Careers</Link></li>
+              <li><Link href="/contact" className="hover:text-primary-600 transition-colors">Contact</Link></li>
+              <li><Link href="/press" className="hover:text-primary-600 transition-colors">Press</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-navy-900 mb-4">Support & Trust</h4>
+            <h4 className="font-heading font-semibold text-navy-900 mb-4">Support & Legal</h4>
             <ul className="space-y-3 text-sm text-navy-600">
-              <li><Link href="/about" className="hover:text-primary-600 transition-colors">Clinical Standards</Link></li>
-              <li><Link href="/prevention" className="hover:text-primary-600 transition-colors">Preventive Hub</Link></li>
-              <li><Link href="/about" className="hover:text-primary-600 transition-colors">NDPR Data Privacy</Link></li>
-              <li><a href="mailto:help@ilertihealth.site" className="hover:text-primary-600 transition-colors">Help Centre</a></li>
+              <li><Link href="/help" className="hover:text-primary-600 transition-colors">Help Centre</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary-600 transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-primary-600 transition-colors">Terms of Service</Link></li>
+              <li><Link href="/cookies" className="hover:text-primary-600 transition-colors">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>
