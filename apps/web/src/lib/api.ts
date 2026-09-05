@@ -1,6 +1,3 @@
-import { DOCTORS } from '../data/doctors';
-import { FACILITIES } from '../data/facilities';
-
 export interface TriageResult {
   urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY';
   specialistRecommended: string;
@@ -9,53 +6,59 @@ export interface TriageResult {
   isFallback?: boolean;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ilerti-health.onrender.com/api/v1';
+
+function getAuthHeader(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem('ilerti-auth');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    const token = parsed.state?.token;
+    if (token) {
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch {}
+  return {};
+}
 
 async function fetchJson(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
   const headers = {
     'Content-Type': 'application/json',
+    ...getAuthHeader(),
     ...(options.headers || {}),
   };
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
-    throw new Error(`HTTP error! status: ${res.status}`);
+    const errorBody = await res.text();
+    throw new Error(errorBody || `HTTP error! status: ${res.status}`);
   }
   return res.json();
 }
 
 export const api = {
   auth: {
-    login: async (credentials: any) => {
-      try {
-        return await fetchJson('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify(credentials),
-        });
-      } catch (error) {
-        console.warn('API login fallback used');
-        return { user: { id: 'demo1', name: 'Adebayo', role: 'PATIENT' }, token: 'mock-jwt-token' };
-      }
+    login: async (credentials: { email?: string; phone?: string; password: string }) => {
+      return await fetchJson('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
     },
     register: async (userData: any) => {
-      try {
-        return await fetchJson('/auth/register', {
-          method: 'POST',
-          body: JSON.stringify(userData),
-        });
-      } catch (error) {
-        return { success: true };
-      }
+      return await fetchJson('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
     },
-    verifyOtp: async (data: any) => {
-      try {
-        return await fetchJson('/auth/verify-otp', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        });
-      } catch (error) {
-        return { success: true };
-      }
+    verifyOtp: async (data: { emailOrPhone: string; otp: string }) => {
+      return await fetchJson('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    me: async () => {
+      return await fetchJson('/auth/me');
     },
   },
   ai: {
@@ -80,74 +83,52 @@ export const api = {
     },
   },
   doctors: {
-    getAll: async (filters?: any) => {
-      try {
-        const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
-        return await fetchJson(`/doctors${queryParams}`);
-      } catch (error) {
-        return DOCTORS;
-      }
+    getAll: async (filters?: Record<string, string>) => {
+      const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
+      return await fetchJson(`/doctors${queryParams}`);
     },
     getById: async (id: string) => {
-      try {
-        return await fetchJson(`/doctors/${id}`);
-      } catch (error) {
-        return DOCTORS.find((d) => d.id === id) || DOCTORS[0];
-      }
+      return await fetchJson(`/doctors/${id}`);
+    },
+    onboard: async (doctorData: any) => {
+      return await fetchJson('/doctors/onboard', {
+        method: 'POST',
+        body: JSON.stringify(doctorData),
+      });
     },
   },
   consultations: {
     create: async (bookingData: any) => {
-      try {
-        return await fetchJson('/consultations', {
-          method: 'POST',
-          body: JSON.stringify(bookingData),
-        });
-      } catch (error) {
-        return { id: 'c-101', status: 'SCHEDULED' };
-      }
+      return await fetchJson('/consultations', {
+        method: 'POST',
+        body: JSON.stringify(bookingData),
+      });
+    },
+    getMyConsultations: async () => {
+      return await fetchJson('/consultations/my');
     },
     getById: async (id: string) => {
-      try {
-        return await fetchJson(`/consultations/${id}`);
-      } catch (error) {
-        return {
-          id,
-          status: 'IN_PROGRESS',
-          doctorId: 'dr-1',
-          patientId: 'demo1',
-          doctorName: 'Dr. Funmilayo Adeleke',
-          doctorSpecialty: 'General Practice & Family Medicine',
-          patientName: 'Adebayo Johnson',
-          patientAge: 32,
-          patientGender: 'Male',
-          bloodGroup: 'O+',
-          allergies: ['Penicillin', 'Sulfa drugs'],
-          chiefComplaint: 'Persistent throbbing headache for 2 days, mild fever (38.1°C), and general body weakness.',
-        };
-      }
+      return await fetchJson(`/consultations/${id}`);
     },
   },
   facilities: {
-    getAll: async (filters?: any) => {
-      try {
-        const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
-        return await fetchJson(`/facilities${queryParams}`);
-      } catch (error) {
-        return FACILITIES;
-      }
+    getAll: async (filters?: Record<string, string>) => {
+      const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
+      return await fetchJson(`/facilities${queryParams}`);
+    },
+    getById: async (id: string) => {
+      return await fetchJson(`/facilities/${id}`);
     },
   },
   wellness: {
     generatePlan: async (preferences: any) => {
-      try {
-        return await fetchJson('/wellness/generate-plan', {
-          method: 'POST',
-          body: JSON.stringify(preferences),
-        });
-      } catch (error) {
-        return { plan: 'Balanced Nigerian meal plan with hydration and daily activity.' };
-      }
+      return await fetchJson('/wellness/generate-plan', {
+        method: 'POST',
+        body: JSON.stringify(preferences),
+      });
+    },
+    getMyPlan: async () => {
+      return await fetchJson('/wellness/my-plan');
     },
   },
 };

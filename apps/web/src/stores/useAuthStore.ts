@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 interface User {
   id: string;
   name: string;
+  email?: string;
   role: string;
   avatar?: string;
 }
@@ -28,12 +29,28 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (credentials) => {
         const data = await api.auth.login(credentials);
-        set({ user: data.user, token: data.token, isAuthenticated: true });
+        const userObj: User = {
+          id: data.user?.id || 'u-1',
+          name: `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim() || data.user?.email || 'User',
+          email: data.user?.email,
+          role: (data.user?.role || 'patient').toLowerCase(),
+          avatar: data.user?.avatarUrl,
+        };
+        set({ user: userObj, token: data.access_token, isAuthenticated: true });
       },
 
       register: async (userData) => {
-        await api.auth.register(userData);
-        // Usually you might auto-login or wait for OTP verification
+        const data = await api.auth.register(userData);
+        if (data.access_token && data.user) {
+          const userObj: User = {
+            id: data.user.id,
+            name: `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim() || data.user.email || 'User',
+            email: data.user.email,
+            role: (data.user.role || 'patient').toLowerCase(),
+            avatar: data.user.avatarUrl,
+          };
+          set({ user: userObj, token: data.access_token, isAuthenticated: true });
+        }
       },
 
       logout: () => {
