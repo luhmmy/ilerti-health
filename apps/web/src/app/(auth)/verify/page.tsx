@@ -6,17 +6,17 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { ShieldCheck, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 
 export default function VerifyPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, tempOtp, setVerified, setTempOtp, pendingEmailOrPhone } = useAuthStore();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(59);
   const [isVerifying, setIsVerifying] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const destination = user?.email || 'your email and phone';
+  const destination = pendingEmailOrPhone || user?.email || user?.phone || 'your phone number & email';
 
   useEffect(() => {
     if (countdown > 0) {
@@ -24,6 +24,14 @@ export default function VerifyPage() {
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  // If tempOtp is available, auto-fill for frictionless UX
+  useEffect(() => {
+    if (tempOtp && tempOtp.length === 6 && otp.every(v => v === '')) {
+      const digits = tempOtp.split('');
+      setOtp(digits);
+    }
+  }, [tempOtp]);
 
   const handleChange = (index: number, value: string) => {
     if (value.length > 1) {
@@ -57,9 +65,10 @@ export default function VerifyPage() {
     setIsVerifying(true);
     try {
       await api.auth.verifyOtp({
-        emailOrPhone: user?.email || '',
+        emailOrPhone: user?.email || pendingEmailOrPhone || '',
         otp: code,
       });
+      setVerified();
       toast.success('Account verified successfully! Welcome to ILERTI Health.');
       router.push('/dashboard');
     } catch (err: any) {
@@ -72,28 +81,42 @@ export default function VerifyPage() {
   const handleResend = async () => {
     if (countdown > 0) return;
     try {
-      await api.auth.resendOtp({
-        emailOrPhone: user?.email || '',
+      const res = await api.auth.resendOtp({
+        emailOrPhone: user?.email || pendingEmailOrPhone || '',
       });
       setCountdown(59);
-      toast.success('A new 6-digit verification code was sent via SMS and Email.');
+      if (res?.verificationCode) {
+        setTempOtp(res.verificationCode);
+      }
+      toast.success('A new 6-digit verification code was dispatched via SMS and Email.');
     } catch (err: any) {
       toast.error(err?.message || 'Could not resend code. Please try again.');
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-3xl shadow-sm border border-slate-200 text-center sm:text-left">
+    <div className="w-full max-w-md mx-auto p-6 md:p-8 bg-white rounded-3xl shadow-sm border border-slate-200 text-center sm:text-left my-8">
       <div className="mb-6">
         <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600 mb-4 mx-auto sm:mx-0">
           <ShieldCheck className="w-6 h-6" />
         </div>
         <h2 className="text-2xl font-bold text-slate-900 font-heading">Verify Your Account</h2>
         <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
-          We dispatched a 6-digit verification code via SMS and Email to{' '}
+          We dispatched your 6-digit verification code via SMS and Email to{' '}
           <span className="font-semibold text-slate-800">{destination}</span>.
         </p>
       </div>
+
+      {tempOtp && (
+        <div className="mb-6 p-4 bg-teal-50/70 border border-teal-200 rounded-2xl text-center space-y-1 animate-in fade-in">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-teal-800">
+            <KeyRound className="w-3.5 h-3.5 text-teal-600" />
+            <span>Instant Verification Code:</span>
+          </div>
+          <p className="text-2xl font-bold tracking-widest text-teal-700 font-mono">{tempOtp}</p>
+          <span className="text-[11px] text-slate-400 block">(Auto-filled for your convenience)</span>
+        </div>
+      )}
 
       <div className="space-y-6">
         <div className="flex justify-center gap-2 sm:gap-3">
@@ -109,7 +132,7 @@ export default function VerifyPage() {
               value={digit}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-11 h-14 sm:w-12 sm:h-16 text-center text-2xl font-bold text-slate-900 border-2 border-slate-200 rounded-2xl focus:border-teal-500 focus:ring-0 focus:outline-none transition-colors"
+              className="w-11 h-14 sm:w-12 sm:h-16 text-center text-2xl font-bold text-slate-900 border-2 border-slate-200 rounded-2xl focus:border-teal-500 focus:ring-0 focus:outline-none transition-colors font-mono"
             />
           ))}
         </div>
@@ -125,13 +148,13 @@ export default function VerifyPage() {
               Verifying Code...
             </div>
           ) : (
-            'Confirm & Continue'
+            'Confirm & Continue to Dashboard'
           )}
         </button>
 
         <div className="flex flex-col items-center sm:items-start gap-3 pt-2">
           <p className="text-xs text-slate-600">
-            Didn't receive the code?{' '}
+            Didn't receive the SMS?{' '}
             <button
               onClick={handleResend}
               disabled={countdown > 0}

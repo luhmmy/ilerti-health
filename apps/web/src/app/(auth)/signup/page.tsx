@@ -85,12 +85,8 @@ export default function SignupPage() {
         bio: bio.trim(),
       });
 
-      toast.success(
-        isDoctor 
-          ? `Welcome Dr. ${firstName} ${lastName}! Practitioner account created.` 
-          : "Account created successfully! Welcome to ILERTI Health."
-      );
-      router.push("/dashboard");
+      toast.success("Account created! Verification code sent to your phone and email.");
+      router.push("/verify");
     } catch (error: any) {
       const msg = error?.message || "Failed to create account. Please check your details.";
       toast.error(msg);
