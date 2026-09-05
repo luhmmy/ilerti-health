@@ -14,25 +14,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = serverDb.users.get(key);
+    const user = await serverDb.getUser(key);
     const email = user?.email || (key.includes('@') ? key : '');
     const phone = user?.phone || (!key.includes('@') ? key : undefined);
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    serverDb.otps.set(key, {
+    const otpPayload = {
       code: otp,
       email: email || key,
       phone,
       expiresAt: Date.now() + 10 * 60 * 1000,
-    });
+    };
 
+    await serverDb.saveOtp(key, otpPayload);
     if (email) {
-      serverDb.otps.set(email, {
-        code: otp,
-        email,
-        phone,
-        expiresAt: Date.now() + 10 * 60 * 1000,
-      });
+      await serverDb.saveOtp(email, otpPayload);
     }
 
     // Dispatch real SMS & Email

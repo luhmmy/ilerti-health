@@ -3,7 +3,7 @@ import { serverDb } from '@/lib/serverDb';
 
 export async function POST(req: Request) {
   try {
-    serverDb.wipeAll();
+    await serverDb.wipeAll();
     return NextResponse.json({
       success: true,
       message: 'Serverless database wiped successfully. Clean production state restored.',

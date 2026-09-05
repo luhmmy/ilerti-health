@@ -81,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
           return adminUser;
         }
 
-        // 2. Try Backend API login
+        // 2. Primary Source of Truth: Backend Database API Login
         try {
           const data = await api.auth.login({ email: inputKey, password: inputPass });
           if (data && data.user) {
@@ -90,7 +90,7 @@ export const useAuthStore = create<AuthState>()(
             
             const userObj: User = {
               id: data.user.id || `u-${Date.now()}`,
-              name: `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim() || data.user.email || (isDoctor ? 'Doctor' : 'User'),
+              name: data.user.name || `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim() || data.user.email || (isDoctor ? 'Doctor' : 'User'),
               email: data.user.email,
               phone: data.user.phone,
               role: userRole,
@@ -102,83 +102,63 @@ export const useAuthStore = create<AuthState>()(
               isAvailable: true,
             };
 
+            // Sync to local admin management store for offline/admin views
+            useAdminManagementStore.getState().addUser({
+              id: userObj.id,
+              fullName: userObj.name,
+              email: userObj.email || '',
+              phone: userObj.phone || '',
+              role: userObj.role,
+              status: 'active',
+              registeredAt: new Date().toISOString().split('T')[0],
+              location: `${userObj.cityOfPractice || 'Lagos'}, Nigeria`,
+              mdcnFolio: userObj.mdcnFolio,
+              specialty: userObj.specialty,
+              consultationsCount: 0,
+            });
+
             set({ user: userObj, token: data.access_token || 'auth-token', isAuthenticated: true, pendingEmailOrPhone: null });
             return userObj;
           }
         } catch (apiErr: any) {
-          // Continue to client store lookup
+          const errMsg = apiErr?.message || '';
+          // If server returned an explicit validation/existence error, bubble it up directly!
+          if (
+            errMsg.includes('does not exist') ||
+            errMsg.includes('Invalid email') ||
+            errMsg.includes('Invalid password') ||
+            errMsg.includes('banned') ||
+            errMsg.includes('suspended')
+          ) {
+            throw new Error(errMsg);
+          }
         }
 
-        // 3. Client Database Verification (useAdminManagementStore & useDoctorStore)
+        // 3. Fallback / Client Database Lookup for Offline Dev
         const registeredUsers = useAdminManagementStore.getState().users;
-        const registeredDoctors = useDoctorStore.getState().doctors;
-
-        // Search user directory for registered account
         const matchedUser = registeredUsers.find(
           (u) => (u.email && u.email.toLowerCase() === inputKey) || (u.phone && u.phone.trim() === inputKey)
         );
 
-        // Search doctor directory
-        const matchedDoctor = registeredDoctors.find(
-          (d) => (d.mdcnFolio && d.mdcnFolio.toLowerCase() === inputKey) || d.fullName.toLowerCase() === inputKey
-        );
-
-        // If user is NOT found in the database, reject strictly with clear message!
-        if (!matchedUser && !matchedDoctor) {
-          throw new Error('This account does not exist in the database. Please create an account to sign in.');
-        }
-
         if (matchedUser) {
-          // Check if user is banned or suspended
-          if (matchedUser.status === 'banned') {
-            throw new Error(`Your account has been banned: ${matchedUser.banReason || 'Policy violation'}`);
-          }
-          if (matchedUser.status === 'suspended') {
-            throw new Error(`Your account is currently suspended until ${matchedUser.suspendedUntil || 'further notice'}: ${matchedUser.suspensionReason || 'Under administrative review'}`);
-          }
-
-          // Check password if saved
           if (matchedUser.password && matchedUser.password !== inputPass) {
             throw new Error('Incorrect password. Please verify and try again.');
           }
-
           const isDoc = matchedUser.role === 'doctor' || Boolean(matchedUser.mdcnFolio);
-          const foundDoctor = registeredDoctors.find(
-            (d) => d.fullName.toLowerCase() === matchedUser.fullName.toLowerCase() || d.id === matchedUser.id
-          );
-
           const loggedUser: User = {
             id: matchedUser.id,
             name: matchedUser.fullName,
             email: matchedUser.email,
             phone: matchedUser.phone,
             role: isDoc ? 'doctor' : matchedUser.role,
-            specialty: matchedUser.specialty || foundDoctor?.primarySpecialty || (isDoc ? 'General Practice' : undefined),
-            mdcnFolio: matchedUser.mdcnFolio || foundDoctor?.mdcnFolio,
-            hospitalAffiliation: foundDoctor?.hospitalAffiliation || matchedUser.location,
-            verificationStatus: isDoc ? (foundDoctor?.status === 'verified' ? 'VERIFIED' : 'PENDING') : 'VERIFIED',
+            specialty: matchedUser.specialty || (isDoc ? 'General Practice' : undefined),
+            mdcnFolio: matchedUser.mdcnFolio,
+            hospitalAffiliation: matchedUser.location,
+            verificationStatus: 'VERIFIED',
             isAvailable: true,
           };
-
           set({ user: loggedUser, token: `token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
           return loggedUser;
-        }
-
-        if (matchedDoctor) {
-          const doctorUser: User = {
-            id: matchedDoctor.id,
-            name: matchedDoctor.fullName,
-            email: `${matchedDoctor.fullName.toLowerCase().replace(/\s+/g, '.')}@ilertihealth.site`,
-            role: 'doctor',
-            specialty: matchedDoctor.primarySpecialty,
-            mdcnFolio: matchedDoctor.mdcnFolio,
-            hospitalAffiliation: matchedDoctor.hospitalAffiliation,
-            verificationStatus: matchedDoctor.status === 'verified' ? 'VERIFIED' : 'PENDING',
-            isAvailable: true,
-          };
-
-          set({ user: doctorUser, token: `token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
-          return doctorUser;
         }
 
         throw new Error('This account does not exist in the database. Please create an account to sign in.');
@@ -187,19 +167,30 @@ export const useAuthStore = create<AuthState>()(
       register: async (userData) => {
         const isDoc = userData.isDoctor || userData.role === 'DOCTOR' || userData.role === 'doctor';
         const email = userData.email?.toLowerCase().trim();
-        const newUserId = isDoc ? `dr-${Date.now()}` : `pat-${Date.now()}`;
         const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || (isDoc ? 'Medical Doctor' : 'Patient');
 
-        // Check if account already exists
-        const existingUsers = useAdminManagementStore.getState().users;
-        const alreadyExists = existingUsers.some((u) => u.email.toLowerCase() === email);
-        if (alreadyExists) {
-          throw new Error('An account with this email address already exists. Please sign in instead.');
+        let serverResponse: any = null;
+
+        // 1. Persist to Server Database API
+        try {
+          serverResponse = await api.auth.register({
+            ...userData,
+            email,
+            role: isDoc ? 'DOCTOR' : 'PATIENT',
+          });
+        } catch (apiErr: any) {
+          const errMsg = apiErr?.message || '';
+          if (errMsg.includes('already exists')) {
+            throw new Error('An account with this email already exists. Please sign in instead.');
+          }
         }
 
+        const userId = serverResponse?.user?.id || (isDoc ? `dr-${Date.now()}` : `pat-${Date.now()}`);
+        const verificationOtp = serverResponse?.verificationCode || Math.floor(100000 + Math.random() * 900000).toString();
+
         const newUser: User = {
-          id: newUserId,
-          name: fullName,
+          id: userId,
+          name: serverResponse?.user?.name || fullName,
           email: email,
           phone: userData.phone,
           role: isDoc ? 'doctor' : 'patient',
@@ -215,7 +206,7 @@ export const useAuthStore = create<AuthState>()(
           isAvailable: true,
         };
 
-        // Real-time synchronization to Admin Directory with password for local verification
+        // Real-time synchronization to Admin Directory with password
         useAdminManagementStore.getState().addUser({
           id: newUser.id,
           fullName: newUser.name,
@@ -231,7 +222,7 @@ export const useAuthStore = create<AuthState>()(
           consultationsCount: 0,
         });
 
-        // If Doctor, sync to Doctor directory with pending verification
+        // If Doctor, sync to Doctor directory
         if (isDoc) {
           useDoctorStore.getState().registerDoctor({
             fullName: newUser.name,
@@ -246,12 +237,10 @@ export const useAuthStore = create<AuthState>()(
           });
         }
 
-        const verificationOtp = Math.floor(100000 + Math.random() * 900000).toString();
-
         set({
           user: newUser,
-          token: `token-${Date.now()}`,
-          isAuthenticated: false, // Must verify OTP first
+          token: serverResponse?.access_token || `token-${Date.now()}`,
+          isAuthenticated: false, // Must verify OTP
           tempOtp: verificationOtp,
           pendingEmailOrPhone: email || userData.phone,
         });

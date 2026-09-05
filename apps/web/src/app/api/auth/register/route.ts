@@ -16,7 +16,8 @@ export async function POST(req: Request) {
     const email = data.email.toLowerCase().trim();
 
     // Check if user already exists
-    if (serverDb.users.has(email)) {
+    const existingUser = await serverDb.getUser(email);
+    if (existingUser) {
       return NextResponse.json(
         { message: 'An account with this email already exists. Please sign in.' },
         { status: 400 }
@@ -63,10 +64,7 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    serverDb.users.set(email, newUser);
-    if (data.phone) {
-      serverDb.users.set(data.phone.trim(), newUser);
-    }
+    await serverDb.saveUser(newUser);
 
     if (isDoctor) {
       const doctorRecord: ServerDoctor = {
@@ -86,17 +84,21 @@ export async function POST(req: Request) {
         isAvailable: true,
         createdAt: new Date().toISOString(),
       };
-      serverDb.doctors.set(userId, doctorRecord);
+      await serverDb.saveDoctor(doctorRecord);
     }
 
     // Generate 6-digit verification code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    serverDb.otps.set(email, {
+    const otpPayload = {
       code: otp,
       email,
       phone: data.phone,
       expiresAt: Date.now() + 10 * 60 * 1000,
-    });
+    };
+    await serverDb.saveOtp(email, otpPayload);
+    if (data.phone) {
+      await serverDb.saveOtp(data.phone.trim(), otpPayload);
+    }
 
     // Dispatch real SMS (Termii) and real Email (Resend)
     await dispatchOtp(email, data.phone, otp);

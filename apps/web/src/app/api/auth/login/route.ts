@@ -33,8 +33,8 @@ export async function POST(req: Request) {
       });
     }
 
-    // 2. Lookup user in serverless database
-    const user = serverDb.users.get(inputKey);
+    // 2. Lookup user in persistent database
+    const user = await serverDb.getUser(inputKey);
 
     if (!user) {
       return NextResponse.json(

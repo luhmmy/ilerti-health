@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const storedOtp = serverDb.otps.get(key);
+    const storedOtp = await serverDb.getOtp(key);
     const isValid = (storedOtp && storedOtp.code === otp && storedOtp.expiresAt > Date.now()) || otp === '123456' || otp === '892401';
 
     if (!isValid) {
@@ -24,14 +24,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = serverDb.users.get(key);
+    const user = await serverDb.getUser(key);
     if (user) {
       user.emailVerified = true;
       user.phoneVerified = true;
-      serverDb.users.set(key, user);
+      await serverDb.saveUser(user);
     }
 
-    serverDb.otps.delete(key);
+    await serverDb.deleteOtp(key);
 
     return NextResponse.json({
       success: true,

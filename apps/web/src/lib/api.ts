@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = localStorage.getItem('ilerti-auth');
+    const raw = localStorage.getItem('ilerti-v5-auth') || localStorage.getItem('ilerti-auth');
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     const token = parsed.state?.token;
@@ -34,8 +34,17 @@ async function fetchJson(endpoint: string, options: RequestInit = {}) {
   };
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
-    const errorBody = await res.text();
-    throw new Error(errorBody || `HTTP error! status: ${res.status}`);
+    let errMsg = `HTTP error! status: ${res.status}`;
+    try {
+      const errorBody = await res.json();
+      errMsg = errorBody.message || errorBody.error || errMsg;
+    } catch {
+      try {
+        const textBody = await res.text();
+        if (textBody) errMsg = textBody;
+      } catch {}
+    }
+    throw new Error(errMsg);
   }
   return res.json();
 }
