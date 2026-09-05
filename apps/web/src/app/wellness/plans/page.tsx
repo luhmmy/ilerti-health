@@ -1,6 +1,8 @@
 "use client";
 
 import { ShieldCheck, Heart, Baby, Activity, UserPlus, Apple } from "lucide-react";
+import { Header } from "../../../components/layout/Header";
+import { Footer } from "../../../components/layout/Footer";
 
 export default function PlansPage() {
   const plans = [
@@ -47,38 +49,45 @@ export default function PlansPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="mb-10 text-center max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#1E3A5F]">Special Health Plans</h1>
-        <p className="text-gray-600 mt-4">Clinician-reviewed wellness plans designed specifically for the Nigerian lifestyle. Enroll to get customized daily companions.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans.map(plan => (
-          <div key={plan.id} className={`rounded-2xl border p-6 flex flex-col h-full transition-transform hover:-translate-y-1 ${plan.color}`}>
-            <div className="mb-4 bg-white w-16 h-16 rounded-xl flex items-center justify-center shadow-sm">
-              {plan.icon}
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.title}</h3>
-            <p className="text-gray-600 mb-6 flex-1">{plan.desc}</p>
-            
-            <div className="flex items-center justify-between mt-auto">
-              <div className="flex items-center gap-1 text-xs font-medium text-gray-500 bg-white/50 px-2 py-1 rounded">
-                <ShieldCheck className="w-3 h-3 text-[#0D9488]" /> MDCN Reviewed
-              </div>
-              {plan.enrolled ? (
-                <button className="bg-[#1E3A5F] text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  View Plan
-                </button>
-              ) : (
-                <button className="bg-white text-[#0D9488] border border-[#0D9488] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#CCFBF1] transition-colors">
-                  Enroll Free
-                </button>
-              )}
-            </div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header />
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-12">
+        <div className="mb-10 text-center max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-[#CCFBF1] text-[#0D9488] px-3.5 py-1.5 rounded-full text-xs font-semibold mb-4">
+            Specialized Care Programs
           </div>
-        ))}
-      </div>
+          <h1 className="text-3xl font-bold text-[#1E3A5F]">Special Health Plans</h1>
+          <p className="text-gray-600 mt-4">Clinician-reviewed wellness plans designed specifically for the Nigerian lifestyle. Enroll to get customized daily companions.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {plans.map(plan => (
+            <div key={plan.id} className={`rounded-2xl border p-6 flex flex-col h-full transition-transform hover:-translate-y-1 ${plan.color}`}>
+              <div className="mb-4 bg-white w-16 h-16 rounded-xl flex items-center justify-center shadow-sm">
+                {plan.icon}
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.title}</h3>
+              <p className="text-gray-600 mb-6 flex-1">{plan.desc}</p>
+              
+              <div className="flex items-center justify-between mt-auto">
+                <div className="flex items-center gap-1 text-xs font-medium text-gray-500 bg-white/50 px-2 py-1 rounded">
+                  <ShieldCheck className="w-3 h-3 text-[#0D9488]" /> MDCN Reviewed
+                </div>
+                {plan.enrolled ? (
+                  <button className="bg-[#1E3A5F] text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    View Plan
+                  </button>
+                ) : (
+                  <button className="bg-white text-[#0D9488] border border-[#0D9488] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#CCFBF1] transition-colors">
+                    Enroll Free
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

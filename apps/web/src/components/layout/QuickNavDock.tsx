@@ -6,72 +6,88 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { 
   Home, 
-  Layers, 
   Bot, 
   Stethoscope, 
-  Video, 
+  Building2,
   LayoutDashboard, 
   FileHeart, 
   Apple, 
-  ShieldAlert,
+  CreditCard,
   User,
+  ShieldAlert,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/', icon: Home },
-  { label: 'Hub', href: '/hub', icon: Layers },
   { label: 'AI Triage', href: '/ai', icon: Bot },
   { label: 'Doctors', href: '/doctors', icon: Stethoscope },
-  { label: 'Telehealth', href: '/consultations/checkout/dr-1', icon: Video },
+  { label: 'Facilities', href: '/facilities', icon: Building2 },
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Records', href: '/health', icon: FileHeart },
+  { label: 'Wellness', href: '/wellness', icon: Apple },
+  { label: 'Pricing', href: '/pricing', icon: CreditCard },
   { label: 'Profile', href: '/profile', icon: User },
-  { label: 'Vault', href: '/health', icon: FileHeart },
-  { label: 'Nutrition', href: '/wellness', icon: Apple },
-  { label: 'Admin', href: '/admin', icon: ShieldAlert },
 ];
 
 export function QuickNavDock() {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(true);
 
   if (!isAuthenticated) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="mb-2 bg-navy-900 text-white rounded-full p-1 shadow-lg bg-[#1E3A5F] hover:bg-[#152a45] transition-colors"
-        aria-label="Toggle Quick Navigation"
-      >
-        {isOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-      </button>
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center select-none pointer-events-none">
+      <div className="pointer-events-auto flex flex-col items-center">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="mb-1.5 bg-[#1E3A5F] text-white rounded-full p-1 shadow-lg hover:bg-[#14263e] transition-colors focus:outline-none ring-2 ring-white/50"
+          aria-label="Toggle Quick Navigation"
+          title={isOpen ? "Minimize dock" : "Open quick navigation"}
+        >
+          {isOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+        </button>
 
-      {isOpen && (
-        <div className="bg-white/90 backdrop-blur-md border border-gray-200 shadow-2xl rounded-full px-4 py-2 flex items-center gap-2 md:gap-4 overflow-x-auto max-w-[95vw]">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-            const Icon = item.icon;
-            return (
+        {isOpen && (
+          <div className="bg-white/95 backdrop-blur-md border border-gray-200/80 shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-1 sm:gap-2 overflow-x-auto max-w-[95vw] ring-1 ring-black/5">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center px-2.5 py-1.5 rounded-2xl transition-all min-w-[3.6rem]
+                    ${isActive 
+                      ? 'text-[#0D9488] bg-[#CCFBF1] font-semibold shadow-xs' 
+                      : 'text-gray-500 hover:text-[#1E3A5F] hover:bg-gray-100/80 font-medium'
+                    }`}
+                  title={item.label}
+                >
+                  <Icon size={18} className="mb-0.5" />
+                  <span className="text-[10px] leading-none">{item.label}</span>
+                </Link>
+              );
+            })}
+            {user?.role === 'admin' && (
               <Link
-                key={item.label}
-                href={item.href}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all min-w-[4rem]
-                  ${isActive 
-                    ? 'text-[#0D9488] bg-[#CCFBF1]' 
-                    : 'text-gray-500 hover:text-[#1E3A5F] hover:bg-gray-100'
+                href="/admin"
+                className={`flex flex-col items-center justify-center px-2.5 py-1.5 rounded-2xl transition-all min-w-[3.6rem]
+                  ${pathname.startsWith('/admin')
+                    ? 'text-[#0D9488] bg-[#CCFBF1] font-semibold' 
+                    : 'text-amber-600 hover:text-amber-800 hover:bg-amber-50 font-medium'
                   }`}
-                title={item.label}
+                title="Admin Portal"
               >
-                <Icon size={20} className="mb-1" />
-                <span className="text-[10px] font-medium leading-none">{item.label}</span>
+                <ShieldAlert size={18} className="mb-0.5" />
+                <span className="text-[10px] leading-none">Admin</span>
               </Link>
-            );
-          })}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

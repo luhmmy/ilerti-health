@@ -1,6 +1,8 @@
 "use client";
 
 import { Activity, Stethoscope, Pill, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Header } from "../../../components/layout/Header";
+import { Footer } from "../../../components/layout/Footer";
 
 export default function TimelinePage() {
   const timelineEvents = [
@@ -52,30 +54,30 @@ export default function TimelinePage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#1E3A5F]">Lifelong Health Timeline</h1>
-        <p className="text-gray-600 mt-2">Your complete health journey, seamlessly connected.</p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header />
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#1E3A5F]">Lifelong Health Timeline</h1>
+          <p className="text-gray-600 mt-2">Your complete health journey, seamlessly connected.</p>
+        </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10">
-        <div className="relative border-l-2 border-gray-200 ml-4 md:ml-6 space-y-10">
+        <div className="relative pl-6 border-l-2 border-gray-200 space-y-8 my-8">
           {timelineEvents.map((event) => (
-            <div key={event.id} className="relative pl-8 md:pl-10">
-              <div className={`absolute -left-[21px] top-1 w-10 h-10 rounded-full border-4 border-white flex items-center justify-center ${event.color}`}>
+            <div key={event.id} className="relative group">
+              <div className="absolute -left-[35px] top-1 p-2 rounded-full bg-white border-2 border-gray-200 group-hover:border-[#0D9488] transition-colors shadow-sm">
                 {event.icon}
               </div>
-              <div>
-                <span className="text-sm font-medium text-gray-500 mb-1 block">{event.date}</span>
-                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                  <h3 className="text-lg font-bold text-[#1E3A5F] mb-2">{event.title}</h3>
-                  <p className="text-gray-600">{event.description}</p>
-                </div>
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{event.date}</span>
+                <h3 className="text-lg font-bold text-[#1E3A5F] mt-1 mb-2">{event.title}</h3>
+                <p className="text-gray-600">{event.description}</p>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
