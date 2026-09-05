@@ -6,6 +6,7 @@ export interface ManagedUser {
   fullName: string;
   email: string;
   phone: string;
+  password?: string;
   role: 'patient' | 'doctor' | 'admin' | 'facility_admin';
   status: 'active' | 'suspended' | 'banned';
   suspensionReason?: string;
@@ -130,7 +131,7 @@ export const useAdminManagementStore = create<AdminManagementStore>()(
       },
     }),
     {
-      name: 'ilerti-admin-management-v2', // Updated key for clean fresh production state
+      name: 'ilerti-admin-management-v3',
     }
   )
 );

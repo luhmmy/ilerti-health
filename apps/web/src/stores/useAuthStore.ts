@@ -40,7 +40,15 @@ interface AuthState {
 
 // Clear out legacy deprecated keys on load
 if (typeof window !== 'undefined') {
-  const legacyKeys = ['ilerti-auth', 'ilerti-admin-management', 'ilerti-doctor-storage', 'ilerti-consultations-vault'];
+  const legacyKeys = [
+    'ilerti-auth', 
+    'ilerti-auth-v2',
+    'ilerti-admin-management', 
+    'ilerti-admin-management-v2',
+    'ilerti-doctor-storage', 
+    'ilerti-doctor-storage-v2',
+    'ilerti-consultations-vault'
+  ];
   legacyKeys.forEach((key) => {
     try {
       localStorage.removeItem(key);
@@ -61,10 +69,30 @@ export const useAuthStore = create<AuthState>()(
         const inputKey = (credentials.email || credentials.emailOrPhone || '').toLowerCase().trim();
         const inputPass = credentials.password || '';
 
-        // 1. Try Backend API first
+        if (!inputKey || !inputPass) {
+          throw new Error('Please enter both your email/phone and password.');
+        }
+
+        // 1. Check if Super Administrator login
+        const isAdmin = (inputKey === 'admin@ilertihealth.site' || inputKey === 'admin') && (inputPass === 'ILERTI-ADMIN-2025' || inputPass === 'admin');
+        if (isAdmin) {
+          const adminUser: User = {
+            id: 'admin-master',
+            name: 'System Administrator',
+            email: 'admin@ilertihealth.site',
+            role: 'admin',
+            isAvailable: true,
+          };
+          set({ user: adminUser, token: `admin-token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
+          return adminUser;
+        }
+
+        // 2. Try Backend API login
+        let apiSuccess = false;
         try {
           const data = await api.auth.login({ email: inputKey, password: inputPass });
           if (data && data.user) {
+            apiSuccess = true;
             const isDoctor = (data.user.role || '').toUpperCase() === 'DOCTOR' || Boolean(data.user.doctor);
             const userRole: User['role'] = isDoctor ? 'doctor' : (data.user.role?.toLowerCase() as any) || 'patient';
             
@@ -85,39 +113,46 @@ export const useAuthStore = create<AuthState>()(
             set({ user: userObj, token: data.access_token || 'auth-token', isAuthenticated: true, pendingEmailOrPhone: null });
             return userObj;
           }
-        } catch (apiErr) {
-          // Fall through to local registered state lookup
+        } catch (apiErr: any) {
+          // If the backend actively reported invalid credentials or user not found, surface it if not in client store
+          if (apiErr?.response?.status === 401 || apiErr?.message?.includes('Invalid')) {
+            // Keep checking client store before throwing
+          }
         }
 
-        // 2. Client-side / local registered database lookup
+        // 3. Client Database Verification (useAdminManagementStore & useDoctorStore)
         const registeredUsers = useAdminManagementStore.getState().users;
         const registeredDoctors = useDoctorStore.getState().doctors;
 
-        // Check if admin master login
-        const isAdmin = inputKey.includes('admin') || inputPass === 'ILERTI-ADMIN-2025';
-        if (isAdmin) {
-          const adminUser: User = {
-            id: 'admin-master',
-            name: 'System Administrator',
-            email: inputKey.includes('@') ? inputKey : 'admin@ilertihealth.site',
-            role: 'admin',
-            isAvailable: true,
-          };
-          set({ user: adminUser, token: `admin-token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
-          return adminUser;
+        // Search user directory for registered account
+        const matchedUser = registeredUsers.find(
+          (u) => (u.email && u.email.toLowerCase() === inputKey) || (u.phone && u.phone.trim() === inputKey)
+        );
+
+        // Search doctor directory
+        const matchedDoctor = registeredDoctors.find(
+          (d) => (d.mdcnFolio && d.mdcnFolio.toLowerCase() === inputKey) || d.fullName.toLowerCase() === inputKey
+        );
+
+        // If user is NOT found in any database, reject strictly!
+        if (!matchedUser && !matchedDoctor) {
+          throw new Error('This account does not exist in the database. Please create an account to get started.');
         }
 
-        // Search registered user directory
-        const matchedUser = registeredUsers.find(
-          (u) => u.email.toLowerCase() === inputKey || (u.phone && u.phone.includes(inputKey))
-        );
-
-        // Search registered doctor directory
-        const matchedDoctor = registeredDoctors.find(
-          (d) => d.fullName.toLowerCase() === inputKey || (d.mdcnFolio && d.mdcnFolio.toLowerCase() === inputKey)
-        );
-
         if (matchedUser) {
+          // Check if user is banned or suspended
+          if (matchedUser.status === 'banned') {
+            throw new Error(`Your account has been banned: ${matchedUser.banReason || 'Policy violation'}`);
+          }
+          if (matchedUser.status === 'suspended') {
+            throw new Error(`Your account is currently suspended until ${matchedUser.suspendedUntil || 'further notice'}: ${matchedUser.suspensionReason || 'Under administrative review'}`);
+          }
+
+          // Check password if saved
+          if (matchedUser.password && matchedUser.password !== inputPass) {
+            throw new Error('Incorrect password. Please verify and try again.');
+          }
+
           const isDoc = matchedUser.role === 'doctor' || Boolean(matchedUser.mdcnFolio);
           const foundDoctor = registeredDoctors.find(
             (d) => d.fullName.toLowerCase() === matchedUser.fullName.toLowerCase() || d.id === matchedUser.id
@@ -144,7 +179,7 @@ export const useAuthStore = create<AuthState>()(
           const doctorUser: User = {
             id: matchedDoctor.id,
             name: matchedDoctor.fullName,
-            email: inputKey.includes('@') ? inputKey : `${matchedDoctor.fullName.toLowerCase().replace(/\s+/g, '.')}@ilertihealth.site`,
+            email: `${matchedDoctor.fullName.toLowerCase().replace(/\s+/g, '.')}@ilertihealth.site`,
             role: 'doctor',
             specialty: matchedDoctor.primarySpecialty,
             mdcnFolio: matchedDoctor.mdcnFolio,
@@ -157,62 +192,7 @@ export const useAuthStore = create<AuthState>()(
           return doctorUser;
         }
 
-        // If not registered in database, check if it's a doctor or patient credential and create on-the-fly authenticated session
-        if (!inputKey || !inputPass) {
-          throw new Error('Please enter a valid email and password');
-        }
-
-        // Auto-detect role if user is logging in with doctor indicators or credentials
-        const isDocByInput = credentials.role === 'doctor' || inputKey.startsWith('dr.') || inputKey.includes('doctor') || inputPass.toLowerCase().includes('doctor');
-        const rawName = inputKey.split('@')[0] || 'User';
-        const formattedName = isDocByInput
-          ? `Dr. ${rawName.replace(/^dr\.?/, '').replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}`.trim()
-          : rawName.replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()).trim();
-
-        const createdUser: User = {
-          id: isDocByInput ? `dr-${Date.now()}` : `pat-${Date.now()}`,
-          name: formattedName,
-          email: inputKey.includes('@') ? inputKey : `${rawName}@ilertihealth.site`,
-          phone: '+2348000000000',
-          role: isDocByInput ? 'doctor' : 'patient',
-          specialty: isDocByInput ? 'General Practice & Family Medicine' : undefined,
-          mdcnFolio: isDocByInput ? `MDCN/${new Date().getFullYear()}/${Math.floor(10000 + Math.random() * 90000)}` : undefined,
-          hospitalAffiliation: isDocByInput ? 'Registered Clinical Practice' : undefined,
-          verificationStatus: isDocByInput ? 'VERIFIED' : undefined,
-          isAvailable: true,
-        };
-
-        // Sync into admin management store
-        useAdminManagementStore.getState().addUser({
-          id: createdUser.id,
-          fullName: createdUser.name,
-          email: createdUser.email || '',
-          phone: createdUser.phone || '',
-          role: createdUser.role,
-          status: 'active',
-          registeredAt: new Date().toISOString().split('T')[0],
-          location: 'Lagos, Nigeria',
-          mdcnFolio: createdUser.mdcnFolio,
-          specialty: createdUser.specialty,
-          consultationsCount: 0,
-        });
-
-        if (isDocByInput) {
-          useDoctorStore.getState().registerDoctor({
-            fullName: createdUser.name,
-            mdcnFolio: createdUser.mdcnFolio || 'MDCN/2026/00000',
-            primarySpecialty: createdUser.specialty || 'General Practice',
-            hospitalAffiliation: createdUser.hospitalAffiliation || 'Private Practice',
-            stateOfPractice: 'Lagos',
-            cityOfPractice: 'Lagos',
-            consultationFee: 10000,
-            languages: ['English'],
-            bio: 'Verified medical practitioner on ILERTI Health.',
-          });
-        }
-
-        set({ user: createdUser, token: `token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
-        return createdUser;
+        throw new Error('This account does not exist in the database. Please create an account to get started.');
       },
 
       register: async (userData) => {
@@ -220,6 +200,13 @@ export const useAuthStore = create<AuthState>()(
         const email = userData.email?.toLowerCase().trim();
         const newUserId = isDoc ? `dr-${Date.now()}` : `pat-${Date.now()}`;
         const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || (isDoc ? 'Medical Doctor' : 'Patient');
+
+        // Check if account already exists
+        const existingUsers = useAdminManagementStore.getState().users;
+        const alreadyExists = existingUsers.some((u) => u.email.toLowerCase() === email);
+        if (alreadyExists) {
+          throw new Error('An account with this email address already exists. Please sign in instead.');
+        }
 
         const newUser: User = {
           id: newUserId,
@@ -239,12 +226,13 @@ export const useAuthStore = create<AuthState>()(
           isAvailable: true,
         };
 
-        // Real-time synchronization to Admin Directory
+        // Real-time synchronization to Admin Directory with password for local verification
         useAdminManagementStore.getState().addUser({
           id: newUser.id,
           fullName: newUser.name,
           email: newUser.email || '',
           phone: newUser.phone || '',
+          password: userData.password,
           role: newUser.role,
           status: 'active',
           registeredAt: new Date().toISOString().split('T')[0],
@@ -310,7 +298,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'ilerti-auth-v3', // Clean storage key for production
+      name: 'ilerti-auth-v4', // Clean storage key for production
       storage: createJSONStorage(() => localStorage),
     }
   )
