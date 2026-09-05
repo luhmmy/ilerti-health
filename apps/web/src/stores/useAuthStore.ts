@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { api } from '../lib/api';
+import { useAdminManagementStore } from './useAdminManagementStore';
+import { useDoctorStore } from './useDoctorStore';
 
 interface User {
   id: string;
@@ -107,6 +109,37 @@ export const useAuthStore = create<AuthState>()(
               bio: userData.bio,
               verificationStatus: userData.isDoctor ? 'PENDING' : 'VERIFIED',
             };
+
+            // Real-time synchronization to Admin Directory
+            useAdminManagementStore.getState().addUser({
+              id: userObj.id,
+              fullName: userObj.name,
+              email: userObj.email || '',
+              phone: userObj.phone || '',
+              role: userObj.role as any,
+              status: 'active',
+              registeredAt: new Date().toISOString().split('T')[0],
+              location: `${userData.cityOfPractice || 'Lagos'}, Nigeria`,
+              mdcnFolio: userObj.mdcnFolio,
+              specialty: userObj.specialty,
+              consultationsCount: 0,
+            });
+
+            // If Doctor, sync to Doctor directory with pending verification
+            if (userObj.role === 'doctor') {
+              useDoctorStore.getState().registerDoctor({
+                fullName: userObj.name,
+                mdcnFolio: userObj.mdcnFolio || 'MDCN/2026/00000',
+                primarySpecialty: userObj.specialty || 'General Practice',
+                hospitalAffiliation: userObj.hospitalAffiliation || 'Private Practice',
+                stateOfPractice: userObj.stateOfPractice || 'Lagos',
+                cityOfPractice: userObj.cityOfPractice || 'Lagos',
+                consultationFee: userObj.consultationFee || 10000,
+                languages: userObj.languages || ['English'],
+                bio: userObj.bio || 'Verified medical doctor on ILERTI Health.',
+              });
+            }
+
             set({ 
               user: userObj, 
               token: data.access_token || 'reg-token', 
@@ -137,6 +170,36 @@ export const useAuthStore = create<AuthState>()(
             verificationStatus: isDoc ? 'PENDING' : 'VERIFIED',
             isAvailable: true,
           };
+
+          // Real-time synchronization to Admin Directory
+          useAdminManagementStore.getState().addUser({
+            id: fallbackUser.id,
+            fullName: fallbackUser.name,
+            email: fallbackUser.email || '',
+            phone: fallbackUser.phone || '',
+            role: fallbackUser.role as any,
+            status: 'active',
+            registeredAt: new Date().toISOString().split('T')[0],
+            location: `${userData.cityOfPractice || 'Lagos'}, Nigeria`,
+            mdcnFolio: fallbackUser.mdcnFolio,
+            specialty: fallbackUser.specialty,
+            consultationsCount: 0,
+          });
+
+          // If Doctor, sync to Doctor directory with pending verification
+          if (isDoc) {
+            useDoctorStore.getState().registerDoctor({
+              fullName: fallbackUser.name,
+              mdcnFolio: fallbackUser.mdcnFolio || 'MDCN/2026/00000',
+              primarySpecialty: fallbackUser.specialty || 'General Practice',
+              hospitalAffiliation: fallbackUser.hospitalAffiliation || 'Private Practice',
+              stateOfPractice: fallbackUser.stateOfPractice || 'Lagos',
+              cityOfPractice: fallbackUser.cityOfPractice || 'Lagos',
+              consultationFee: fallbackUser.consultationFee || 10000,
+              languages: fallbackUser.languages || ['English'],
+              bio: fallbackUser.bio || 'Verified medical doctor on ILERTI Health.',
+            });
+          }
 
           const fallbackOtp = Math.floor(100000 + Math.random() * 900000).toString();
 

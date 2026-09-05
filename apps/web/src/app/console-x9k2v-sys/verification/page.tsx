@@ -1,7 +1,8 @@
 "use client";
 
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, ShieldCheck } from "lucide-react";
 import { useDoctorStore } from "@/stores/useDoctorStore";
+import { useAdminManagementStore } from "@/stores/useAdminManagementStore";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -9,17 +10,21 @@ export default function SecretVerificationPage() {
   const doctors = useDoctorStore((state) => state.doctors);
   const verifyDoctor = useDoctorStore((state) => state.verifyDoctor);
   const rejectDoctor = useDoctorStore((state) => state.rejectDoctor);
+  const restoreUser = useAdminManagementStore((state) => state.restoreUser);
+  const banUser = useAdminManagementStore((state) => state.banUser);
 
   const pendingDoctors = doctors.filter(d => d.status === 'pending');
 
   const handleVerify = (id: string, name: string) => {
     verifyDoctor(id);
-    toast.success(`${name} has been verified successfully!`);
+    restoreUser(id);
+    toast.success(`${name} verified as licensed MDCN practitioner!`);
   };
 
   const handleReject = (id: string, name: string) => {
     rejectDoctor(id);
-    toast.error(`${name} has been rejected.`);
+    banUser(id, 'MDCN license verification failed');
+    toast.error(`${name} verification rejected.`);
   };
 
   return (

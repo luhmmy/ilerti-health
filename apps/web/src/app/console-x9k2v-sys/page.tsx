@@ -1,22 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { Users, UserCheck, Stethoscope, Banknote, BarChart3, ShieldAlert, ArrowRight, ShieldCheck, Activity, Lock, AlertTriangle } from "lucide-react";
+import { Users, UserCheck, Stethoscope, Banknote, BarChart3, ShieldAlert, ArrowRight, ShieldCheck, Activity, Lock, AlertTriangle, Video, Sparkles } from "lucide-react";
 import { useAdminManagementStore } from "@/stores/useAdminManagementStore";
+import { useDoctorStore } from "@/stores/useDoctorStore";
+import { useConsultationStore } from "@/stores/useConsultationStore";
 
 export default function SecretAdminDashboard() {
   const users = useAdminManagementStore((state) => state.users);
+  const doctors = useDoctorStore((state) => state.doctors);
+  const consultations = useConsultationStore((state) => state.consultations);
   
   const totalPatients = users.filter(u => u.role === 'patient').length;
-  const totalDoctors = users.filter(u => u.role === 'doctor').length;
+  const verifiedDoctorsCount = doctors.filter(d => d.status === 'verified').length;
+  const pendingVerificationsCount = doctors.filter(d => d.status === 'pending').length;
   const suspendedCount = users.filter(u => u.status === 'suspended').length;
   const bannedCount = users.filter(u => u.status === 'banned').length;
+  const totalRevenue = consultations.reduce((acc, c) => acc + (c.amountPaid || 0), 0);
 
   const stats = [
-    { name: "Total Users", value: `${users.length} Records`, change: "+14%", icon: Users, color: "text-blue-500", bg: "bg-blue-100" },
-    { name: "Verified Doctors", value: `${totalDoctors} Doctors`, change: "+6%", icon: UserCheck, color: "text-green-500", bg: "bg-green-100" },
-    { name: "Suspended Accounts", value: `${suspendedCount} Suspended`, change: "Review required", icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-100" },
-    { name: "Banned Users", value: `${bannedCount} Banned`, change: "Enforced", icon: ShieldAlert, color: "text-red-500", bg: "bg-red-100" }
+    { name: "Registered Patients", value: `${totalPatients} Patients`, change: "Real-time Live", icon: Users, color: "text-blue-500", bg: "bg-blue-100" },
+    { name: "Verified Doctors", value: `${verifiedDoctorsCount} MDCN Doctors`, change: `${pendingVerificationsCount} Pending`, icon: UserCheck, color: "text-emerald-500", bg: "bg-emerald-100" },
+    { name: "Active Consultations", value: `${consultations.length} Consults`, change: "Telehealth Room", icon: Video, color: "text-teal-500", bg: "bg-teal-100" },
+    { name: "Suspended / Banned", value: `${suspendedCount + bannedCount} Restricted`, change: `${bannedCount} Banned`, icon: ShieldAlert, color: "text-rose-500", bg: "bg-rose-100" }
   ];
 
   return (
@@ -24,10 +30,10 @@ export default function SecretAdminDashboard() {
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 text-xs font-mono bg-navy-100 text-[#1E3A5F] px-2.5 py-1 rounded-md mb-2">
-            <Lock className="w-3 h-3 text-[#0D9488]" /> High Security Tier • 2FA Active
+            <Lock className="w-3 h-3 text-[#0D9488]" /> High Security Tier • 2FA Active • Live Database
           </div>
           <h1 className="text-3xl font-extrabold text-[#1E3A5F]">Super Admin Control Console</h1>
-          <p className="text-gray-600 mt-1">Platform-wide user moderation, doctor verification, and disease surveillance.</p>
+          <p className="text-gray-600 mt-1">Platform-wide user moderation, doctor verification, and live healthcare analytics.</p>
         </div>
         <Link
           href="/console-x9k2v-sys/users"
@@ -67,8 +73,8 @@ export default function SecretAdminDashboard() {
               className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-[#0D9488] hover:bg-gray-50 transition-all group"
             >
               <div>
-                <h3 className="font-bold text-gray-900 group-hover:text-[#0D9488]">All Users Directory (Patients & Doctors)</h3>
-                <p className="text-xs text-gray-500">View, ban, suspend, or change permissions</p>
+                <h3 className="font-bold text-gray-900 group-hover:text-[#0D9488]">All Users Directory ({users.length} Registered)</h3>
+                <p className="text-xs text-gray-500">{totalPatients} Patients • {doctors.length} Doctors</p>
               </div>
               <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0D9488] group-hover:translate-x-1 transition-all" />
             </Link>
@@ -81,8 +87,10 @@ export default function SecretAdminDashboard() {
                 <h3 className="font-bold text-gray-900 group-hover:text-[#0D9488]">MDCN Doctor Verification Queue</h3>
                 <p className="text-xs text-gray-500">Review practicing licenses and hospital credentials</p>
               </div>
-              <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
-                3
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
+                pendingVerificationsCount > 0 ? "bg-amber-100 text-amber-800 animate-pulse" : "bg-emerald-100 text-emerald-800"
+              }`}>
+                {pendingVerificationsCount}
               </div>
             </Link>
           </div>

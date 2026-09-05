@@ -20,6 +20,7 @@ export interface ManagedUser {
 
 interface AdminManagementStore {
   users: ManagedUser[];
+  addUser: (user: ManagedUser) => void;
   banUser: (id: string, reason: string) => void;
   suspendUser: (id: string, reason: string, days: number) => void;
   restoreUser: (id: string) => void;
@@ -132,6 +133,24 @@ export const useAdminManagementStore = create<AdminManagementStore>()(
   persist(
     (set, get) => ({
       users: initialUsers,
+
+      addUser: (newUser) => {
+        set((state) => {
+          const exists = state.users.some(
+            (u) => u.id === newUser.id || u.email.toLowerCase() === newUser.email.toLowerCase()
+          );
+          if (exists) {
+            return {
+              users: state.users.map((u) =>
+                u.id === newUser.id || u.email.toLowerCase() === newUser.email.toLowerCase()
+                  ? { ...u, ...newUser }
+                  : u
+              ),
+            };
+          }
+          return { users: [newUser, ...state.users] };
+        });
+      },
 
       banUser: (id, reason) => {
         set((state) => ({
