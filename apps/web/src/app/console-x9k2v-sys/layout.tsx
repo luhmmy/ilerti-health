@@ -20,16 +20,20 @@ import {
   Smartphone,
   RefreshCw,
   CheckCircle2,
-  Shield
+  Shield,
+  Clock,
+  LogOut
 } from "lucide-react";
 import { toast } from "sonner";
+
+const ADMIN_IDLE_SECONDS = 15 * 60; // 15 minutes
 
 export default function SecretAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, user, updateProfile } = useAuthStore();
+  const { isAuthenticated, user, updateProfile, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [mfaVerified, setMfaVerified] = useState(false);
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
@@ -37,6 +41,7 @@ export default function SecretAdminLayout({
   const [isVerifying, setIsVerifying] = useState(false);
   const [activeMfaTab, setActiveMfaTab] = useState<"totp" | "sms">("totp");
   const [demoCode, setDemoCode] = useState("892401");
+  const [secondsRemaining, setSecondsRemaining] = useState(ADMIN_IDLE_SECONDS);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -48,6 +53,60 @@ export default function SecretAdminLayout({
       setMfaVerified(true);
     }
   }, []);
+
+  // Inactivity countdown timer for Admin Console
+  useEffect(() => {
+    if (!mfaVerified) return;
+
+    const resetIdleTimer = () => {
+      setSecondsRemaining(ADMIN_IDLE_SECONDS);
+    };
+
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"];
+    events.forEach((evt) => {
+      window.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
+
+    const interval = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleLockConsole(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      events.forEach((evt) => {
+        window.removeEventListener(evt, resetIdleTimer);
+      });
+    };
+  }, [mfaVerified]);
+
+  const handleLockConsole = (isAutoTimeout = false) => {
+    setMfaVerified(false);
+    sessionStorage.removeItem("ilerti_admin_mfa_passed");
+    setOtpCode(["", "", "", "", "", ""]);
+    setAdminPasscode("");
+    if (isAutoTimeout) {
+      toast.warning("Admin Console Locked", {
+        description: "Your session auto-locked due to 15 minutes of inactivity for medical data protection.",
+        duration: 6000,
+      });
+    } else {
+      toast.info("Admin console locked successfully.");
+    }
+  };
+
+  // Format seconds to mm:ss
+  const formatTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remainder = secs % 60;
+    return `${mins}:${remainder < 10 ? "0" : ""}${remainder}`;
+  };
 
   if (!mounted) {
     return (
@@ -281,58 +340,83 @@ export default function SecretAdminLayout({
               </span>
             </div>
 
-            <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto text-xs sm:text-sm font-medium">
-              <Link
-                href="/console-x9k2v-sys"
-                className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  pathname === "/console-x9k2v-sys"
-                    ? "bg-white/20 text-white font-bold"
-                    : "text-blue-100 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" /> Overview
-              </Link>
-              <Link
-                href="/console-x9k2v-sys/users"
-                className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  pathname === "/console-x9k2v-sys/users"
-                    ? "bg-white/20 text-white font-bold"
-                    : "text-blue-100 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Users className="w-4 h-4" /> Users & Doctors (Ban/Suspend)
-              </Link>
-              <Link
-                href="/console-x9k2v-sys/verification"
-                className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  pathname === "/console-x9k2v-sys/verification"
-                    ? "bg-white/20 text-white font-bold"
-                    : "text-blue-100 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <UserCheck className="w-4 h-4" /> MDCN Verification
-              </Link>
-              <Link
-                href="/console-x9k2v-sys/insights"
-                className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  pathname === "/console-x9k2v-sys/insights"
-                    ? "bg-white/20 text-white font-bold"
-                    : "text-blue-100 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <BarChart3 className="w-4 h-4" /> Health Insights
-              </Link>
-              <Link
-                href="/console-x9k2v-sys/security"
-                className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                  pathname === "/console-x9k2v-sys/security"
-                    ? "bg-white/20 text-white font-bold"
-                    : "text-blue-100 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Shield className="w-4 h-4" /> 2FA & Audit Logs
-              </Link>
-            </nav>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto text-xs sm:text-sm font-medium">
+                <Link
+                  href="/console-x9k2v-sys"
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    pathname === "/console-x9k2v-sys"
+                      ? "bg-white/20 text-white font-bold"
+                      : "text-blue-100 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" /> Overview
+                </Link>
+                <Link
+                  href="/console-x9k2v-sys/users"
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    pathname === "/console-x9k2v-sys/users"
+                      ? "bg-white/20 text-white font-bold"
+                      : "text-blue-100 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Users className="w-4 h-4" /> Users & Doctors
+                </Link>
+                <Link
+                  href="/console-x9k2v-sys/verification"
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    pathname === "/console-x9k2v-sys/verification"
+                      ? "bg-white/20 text-white font-bold"
+                      : "text-blue-100 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <UserCheck className="w-4 h-4" /> MDCN Verification
+                </Link>
+                <Link
+                  href="/console-x9k2v-sys/insights"
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    pathname === "/console-x9k2v-sys/insights"
+                      ? "bg-white/20 text-white font-bold"
+                      : "text-blue-100 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" /> Health Insights
+                </Link>
+                <Link
+                  href="/console-x9k2v-sys/security"
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    pathname === "/console-x9k2v-sys/security"
+                      ? "bg-white/20 text-white font-bold"
+                      : "text-blue-100 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Shield className="w-4 h-4" /> 2FA & Audit Logs
+                </Link>
+              </nav>
+
+              {/* Inactivity Auto-Lock Badge & Quick Lock Button */}
+              <div className="flex items-center gap-2 border-l border-navy-700 pl-3 ml-1">
+                <div 
+                  title="Auto-locks after 15 minutes of inactivity for medical privacy"
+                  className="flex items-center gap-1.5 bg-navy-950/80 border border-slate-600/50 px-2.5 py-1 rounded-lg text-xs font-mono text-slate-200"
+                >
+                  <Clock className={`w-3.5 h-3.5 ${secondsRemaining < 120 ? 'text-amber-400 animate-pulse' : 'text-[#4ADE80]'}`} />
+                  <span className="hidden lg:inline text-slate-400 text-[11px]">Auto-Lock:</span>
+                  <span className={`font-bold ${secondsRemaining < 120 ? 'text-amber-400 font-bold' : 'text-white'}`}>
+                    {formatTime(secondsRemaining)}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleLockConsole(false)}
+                  title="Lock Admin Console Immediately"
+                  className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                >
+                  <Lock className="w-3 h-3" /> Lock
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
