@@ -13,15 +13,18 @@ import {
   Volume2, 
   RotateCcw,
   Zap,
+  Play,
   Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHydrationStore } from "@/stores/useHydrationStore";
+import { LiveGlassCupDrinkMonitor } from "@/components/wellness/LiveGlassCupDrinkMonitor";
 import { toast } from "sonner";
 
 interface HydrationScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultMode?: "monitor" | "scan";
 }
 
 const VOLUME_OPTIONS = [
@@ -32,7 +35,8 @@ const VOLUME_OPTIONS = [
   { label: "Large Bottle", ml: 750, desc: "750ml sports flask" },
 ];
 
-export function HydrationScannerModal({ isOpen, onClose }: HydrationScannerModalProps) {
+export function HydrationScannerModal({ isOpen, onClose, defaultMode = "monitor" }: HydrationScannerModalProps) {
+  const [activeTab, setActiveTab] = useState<"monitor" | "scan">(defaultMode);
   const { addIntake } = useHydrationStore();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -169,32 +173,78 @@ export function HydrationScannerModal({ isOpen, onClose }: HydrationScannerModal
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
       <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         
-        {/* Modal Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 text-white">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
-              <Scan className="w-4 h-4" />
+        {/* Modal Header with Mode Switcher */}
+        <div className="p-4 border-b border-slate-800 bg-slate-900/90 text-white space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+                <Scan className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base flex items-center gap-1.5">
+                  AI Hydration Verification
+                  <span className="text-[10px] bg-cyan-500/30 text-cyan-300 font-semibold px-2 py-0.5 rounded-full border border-cyan-400/30">
+                    Smart Vision
+                  </span>
+                </h3>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-base flex items-center gap-1.5">
-                AI Hydration Scanner
-                <span className="text-[10px] bg-blue-500/30 text-blue-300 font-semibold px-2 py-0.5 rounded-full border border-blue-400/30">
-                  Live Vision
-                </span>
-              </h3>
-              <p className="text-xs text-slate-400">Scan your glass cup or bottle to verify water intake</p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Mode Switcher Tabs */}
+          <div className="flex bg-slate-800/80 p-1 rounded-2xl border border-slate-700">
+            <button
+              type="button"
+              onClick={() => setActiveTab("monitor")}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === "monitor"
+                  ? "bg-cyan-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Camera className="w-3.5 h-3.5" />
+              Live Glass Drink Monitor
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("scan");
+                startCamera();
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === "scan"
+                  ? "bg-cyan-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Scan className="w-3.5 h-3.5" />
+              Instant Vessel Scan
+            </button>
+          </div>
         </div>
 
-        {/* Viewfinder Area */}
-        <div className="relative aspect-[4/3] bg-black overflow-hidden flex items-center justify-center">
+        {/* Live Drinking Monitor Mode */}
+        {activeTab === "monitor" ? (
+          <div className="p-2">
+            <LiveGlassCupDrinkMonitor
+              onComplete={(amount) => {
+                setTimeout(() => {
+                  onClose();
+                }, 1500);
+              }}
+              onCancel={onClose}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Viewfinder Area */}
+            <div className="relative aspect-[4/3] bg-black overflow-hidden flex items-center justify-center">
           
           {/* Live Video Feed */}
           {!capturedImage ? (
@@ -375,8 +425,10 @@ export function HydrationScannerModal({ isOpen, onClose }: HydrationScannerModal
                 Analyzing image...
               </Button>
             )}
+            </div>
           </div>
-        </div>
+        </>
+      )}
 
       </div>
     </div>

@@ -55,13 +55,25 @@ export default function WellnessPage() {
             </p>
           </div>
 
-          <Button
-            onClick={() => setScannerOpen(true)}
-            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 flex items-center gap-2 rounded-xl py-5 px-5"
-          >
-            <Camera className="w-4 h-4 animate-pulse" />
-            <span>Scan Water Glass</span>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/wellness/nutrition">
+              <Button
+                variant="outline"
+                className="border-teal-300 text-teal-700 bg-teal-50 hover:bg-teal-100 flex items-center gap-2 rounded-xl py-5 px-4 font-bold text-xs"
+              >
+                <Utensils className="w-4 h-4 text-teal-600" />
+                <span>Nigerian Meal Timetable &amp; Budget</span>
+              </Button>
+            </Link>
+
+            <Button
+              onClick={() => setScannerOpen(true)}
+              className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20 flex items-center gap-2 rounded-xl py-5 px-5 font-bold text-xs"
+            >
+              <Camera className="w-4 h-4 animate-pulse" />
+              <span>Drink with Live Camera (Glass Cup)</span>
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
