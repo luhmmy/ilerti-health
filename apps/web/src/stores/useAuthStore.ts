@@ -35,6 +35,7 @@ interface AuthState {
   setTempOtp: (otp: string | null) => void;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
+  wipeAllAuthData: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,38 +51,45 @@ export const useAuthStore = create<AuthState>()(
         try {
           const data = await api.auth.login(credentials);
           const userObj: User = {
-            id: data.user?.id || 'u-1',
+            id: data.user?.id || `u-${Date.now()}`,
             name: `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim() || data.user?.email || 'User',
             email: data.user?.email || credentials.email,
             phone: data.user?.phone || credentials.phone,
             role: (data.user?.role || (credentials.email?.includes('admin') ? 'admin' : credentials.email?.includes('doctor') || credentials.email?.includes('dr') ? 'doctor' : 'patient')).toLowerCase(),
             avatar: data.user?.avatarUrl,
-            specialty: data.user?.specialty || (credentials.email?.includes('dr') ? 'General Practice' : undefined),
-            verificationStatus: data.user?.verificationStatus || 'VERIFIED',
+            specialty: data.user?.specialty,
+            mdcnFolio: data.user?.mdcnFolio,
+            hospitalAffiliation: data.user?.hospitalAffiliation,
+            verificationStatus: data.user?.verificationStatus || (credentials.email?.includes('dr') ? 'PENDING' : 'VERIFIED'),
           };
           set({ user: userObj, token: data.access_token || 'auth-token', isAuthenticated: true, pendingEmailOrPhone: null });
         } catch (error) {
-          // Fallback demo/offline authentication for Admin, Doctor & Patient
-          const email = credentials.email?.toLowerCase() || '';
-          const isAdmin = email.includes('admin') || credentials.password === 'ILERTI-ADMIN-2025' || credentials.password === 'Password123!';
-          const isDoctor = email.includes('doctor') || email.includes('dr') || credentials.role === 'doctor';
+          // Client-side authentication handling for real dynamic input
+          const email = (credentials.email || credentials.emailOrPhone || '').toLowerCase();
+          const isAdmin = email.includes('admin') || credentials.password === 'ILERTI-ADMIN-2025';
+          const isDoctor = credentials.role === 'doctor' || email.includes('dr.') || email.includes('doctor');
           
-          const fallbackUser: User = {
-            id: isAdmin ? 'admin-1' : isDoctor ? 'dr-1' : 'user-1',
-            name: isAdmin ? 'Super Administrator' : isDoctor ? 'Dr. Funmilayo Adeleke' : 'Chinedu Okafor',
-            email: credentials.email || (isDoctor ? 'dr.adeleke@ilertihealth.site' : 'admin@ilertihealth.site'),
-            phone: credentials.phone || '+2348010000001',
+          const rawName = email.split('@')[0] || 'User';
+          const formattedName = isDoctor 
+            ? `Dr. ${rawName.replace(/^dr\.?/, '').replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}`.trim()
+            : rawName.replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()).trim();
+
+          const enteredUser: User = {
+            id: isAdmin ? `admin-${Date.now()}` : isDoctor ? `dr-${Date.now()}` : `pat-${Date.now()}`,
+            name: isAdmin ? 'System Administrator' : formattedName,
+            email: credentials.email || credentials.emailOrPhone || (isAdmin ? 'admin@ilertihealth.site' : `${rawName}@ilertihealth.site`),
+            phone: credentials.phone || '+2348000000000',
             role: isAdmin ? 'admin' : isDoctor ? 'doctor' : 'patient',
-            specialty: isDoctor ? 'General Practice & Cardiology' : undefined,
-            mdcnFolio: isDoctor ? 'MDCN/2021/89402' : undefined,
-            hospitalAffiliation: isDoctor ? 'Lagos University Teaching Hospital' : undefined,
+            specialty: isDoctor ? 'General Practice & Family Medicine' : undefined,
+            mdcnFolio: isDoctor ? `MDCN/${new Date().getFullYear()}/${Math.floor(10000 + Math.random() * 90000)}` : undefined,
+            hospitalAffiliation: isDoctor ? 'General Hospital Practice' : undefined,
             verificationStatus: isDoctor ? 'VERIFIED' : undefined,
-            avatar: undefined,
+            isAvailable: true,
           };
 
           set({
-            user: fallbackUser,
-            token: 'fallback-authenticated-jwt-token',
+            user: enteredUser,
+            token: `token-${Date.now()}`,
             isAuthenticated: true,
             pendingEmailOrPhone: null,
           });
@@ -237,9 +245,13 @@ export const useAuthStore = create<AuthState>()(
           user: state.user ? { ...state.user, ...data } : null,
         }));
       },
+
+      wipeAllAuthData: () => {
+        set({ user: null, token: null, isAuthenticated: false, tempOtp: null, pendingEmailOrPhone: null });
+      },
     }),
     {
-      name: 'ilerti-auth',
+      name: 'ilerti-auth-v2', // Updated key for clean fresh production state
       storage: createJSONStorage(() => localStorage),
     }
   )

@@ -18,27 +18,34 @@ import {
   Calendar,
   Mail,
   Phone,
-  MapPin
+  MapPin,
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 import { useAdminManagementStore, ManagedUser } from "@/stores/useAdminManagementStore";
+import { useDoctorStore } from "@/stores/useDoctorStore";
+import { useConsultationStore } from "@/stores/useConsultationStore";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
 export default function UsersManagementPage() {
-  const { users, banUser, suspendUser, restoreUser, searchUsers } = useAdminManagementStore();
+  const { users, banUser, suspendUser, restoreUser, deleteUser, wipeAllUsers, searchUsers } = useAdminManagementStore();
+  const { wipeAllDoctors } = useDoctorStore();
+  const { wipeAllConsultations } = useConsultationStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
   // Modal State
   const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
-  const [actionType, setActionType] = useState<"ban" | "suspend" | null>(null);
+  const [actionType, setActionType] = useState<"ban" | "suspend" | "delete" | "wipe_all" | null>(null);
   const [reason, setReason] = useState("");
   const [suspendDays, setSuspendDays] = useState(14);
 
   const filteredUsers = searchUsers(searchQuery, selectedRole, selectedStatus);
 
-  const handleOpenAction = (user: ManagedUser, type: "ban" | "suspend") => {
+  const handleOpenAction = (user: ManagedUser, type: "ban" | "suspend" | "delete") => {
     setSelectedUser(user);
     setActionType(type);
     setReason("");
@@ -46,6 +53,15 @@ export default function UsersManagementPage() {
 
   const handleConfirmAction = (e: React.FormEvent) => {
     e.preventDefault();
+    if (actionType === "wipe_all") {
+      wipeAllUsers();
+      wipeAllDoctors();
+      wipeAllConsultations();
+      toast.success("Database wiped successfully. Clean production state restored.");
+      setActionType(null);
+      return;
+    }
+
     if (!selectedUser || !actionType) return;
 
     if (actionType === "ban") {
@@ -54,6 +70,9 @@ export default function UsersManagementPage() {
     } else if (actionType === "suspend") {
       suspendUser(selectedUser.id, reason, Number(suspendDays));
       toast.warning(`${selectedUser.fullName} has been suspended for ${suspendDays} days.`);
+    } else if (actionType === "delete") {
+      deleteUser(selectedUser.id);
+      toast.info(`Account for ${selectedUser.fullName} removed.`);
     }
 
     setSelectedUser(null);
@@ -70,12 +89,20 @@ export default function UsersManagementPage() {
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[#1E3A5F]">User & Practitioner Directory</h1>
-          <p className="text-gray-600 mt-1">Manage accounts, assign roles, enforce suspensions, or ban abusive users.</p>
+          <p className="text-gray-600 mt-1">Real-time live directory of registered patients, doctors, and facility administrators.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Badge className="bg-[#1E3A5F] text-white px-3 py-1">
-            {filteredUsers.length} Account{filteredUsers.length !== 1 ? 's' : ''} Shown
+            {filteredUsers.length} Account{filteredUsers.length !== 1 ? 's' : ''} Active
           </Badge>
+          <button
+            type="button"
+            onClick={() => setActionType("wipe_all")}
+            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+            title="Purge all user cache and restart with clean empty database"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Wipe / Fresh Start
+          </button>
         </div>
       </div>
 
@@ -140,8 +167,14 @@ export default function UsersManagementPage() {
             <tbody className="divide-y divide-gray-100 text-sm">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">
-                    No users match your current search and filter criteria.
+                  <td colSpan={5} className="p-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Users className="w-8 h-8 text-gray-300" />
+                      <p className="font-semibold text-gray-700">No registered accounts found in the database.</p>
+                      <p className="text-xs text-gray-400 max-w-sm">
+                        As patients and healthcare professionals create accounts on the registration page, their profiles will appear here dynamically in real time.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -151,8 +184,12 @@ export default function UsersManagementPage() {
                       <div className="font-bold text-gray-900">{user.fullName}</div>
                       <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
                         <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {user.email}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {user.phone}</span>
+                        {user.phone && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {user.phone}</span>
+                          </>
+                        )}
                       </div>
                     </td>
 
@@ -169,7 +206,7 @@ export default function UsersManagementPage() {
                       </div>
                       {user.specialty && (
                         <div className="text-xs text-gray-600 mt-1 font-medium">
-                          {user.specialty} ({user.mdcnFolio})
+                          {user.specialty} {user.mdcnFolio ? `(${user.mdcnFolio})` : ''}
                         </div>
                       )}
                     </td>
@@ -246,8 +283,39 @@ export default function UsersManagementPage() {
         </div>
       </div>
 
-      {/* Ban / Suspend Action Modal */}
-      {selectedUser && actionType && (
+      {/* Modal Actions */}
+      {actionType === "wipe_all" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Wipe Database &amp; Clean Start</h2>
+            <p className="text-xs text-gray-600 mb-6">
+              This will erase all cached user accounts, test practitioners, consultations, and prescriptions to restore a 100% pristine production state.
+            </p>
+
+            <form onSubmit={handleConfirmAction} className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setActionType(null)}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-xl text-sm hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow-md transition-colors"
+              >
+                Confirm Wipe
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {selectedUser && (actionType === "ban" || actionType === "suspend") && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative">
             <button

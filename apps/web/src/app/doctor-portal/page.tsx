@@ -56,27 +56,27 @@ export default function DoctorPortalPage() {
 
   // Identify matching doctor record in store
   const currentDoctor = doctors.find(
-    (d) => d.id === user?.id || (user?.email && d.fullName.toLowerCase() === user?.name.toLowerCase())
+    (d) => d.id === user?.id || (user?.email && d.fullName.toLowerCase() === (user?.name || "").toLowerCase())
   );
 
-  const doctorName = user?.name || currentDoctor?.fullName || "Dr. Funmilayo Adeleke";
+  const doctorName = user?.name || currentDoctor?.fullName || "Medical Practitioner";
   const doctorSpecialty = user?.specialty || currentDoctor?.primarySpecialty || "General Practice & Family Medicine";
-  const mdcnFolio = user?.mdcnFolio || currentDoctor?.mdcnFolio || "MDCN/2021/89402";
-  const hospitalAffiliation = user?.hospitalAffiliation || currentDoctor?.hospitalAffiliation || "Lagos University Teaching Hospital";
+  const mdcnFolio = user?.mdcnFolio || currentDoctor?.mdcnFolio || "MDCN Verification Pending";
+  const hospitalAffiliation = user?.hospitalAffiliation || currentDoctor?.hospitalAffiliation || "Registered Practice";
   const isVerified = user?.verificationStatus === "VERIFIED" || currentDoctor?.status === "verified";
 
-  // Filter consultations for this doctor or active room
+  // Filter consultations for this doctor
   const doctorConsultations = consultations.filter(
-    (c) => c.doctorId === user?.id || c.doctorId === '1' || c.doctorName.toLowerCase().includes(doctorName.toLowerCase()) || consultations.length > 0
+    (c) => c.doctorId === user?.id || (user?.name && c.doctorName.toLowerCase().includes(user.name.toLowerCase()))
   );
 
   // Filter prescriptions issued by this doctor
   const doctorPrescriptions = prescriptions.filter(
-    (p) => p.doctorId === user?.id || p.doctorMdcnFolio === mdcnFolio || prescriptions.length > 0
+    (p) => p.doctorId === user?.id || p.doctorMdcnFolio === mdcnFolio
   );
 
   // Financial calculations from real consultation store
-  const totalConsultFee = doctorConsultations.reduce((acc, c) => acc + (c.amountPaid || 10000), 0);
+  const totalConsultFee = doctorConsultations.reduce((acc, c) => acc + (c.amountPaid || 0), 0);
   const netEarnings = Math.round(totalConsultFee * 0.85);
 
   const handleIssueRx = (e: React.FormEvent) => {
@@ -87,7 +87,7 @@ export default function DoctorPortalPage() {
     }
 
     const newRx = issuePrescription({
-      doctorId: user?.id || "dr-1",
+      doctorId: user?.id || "dr-unknown",
       doctorName: doctorName,
       doctorMdcnFolio: mdcnFolio,
       doctorSpecialty: doctorSpecialty,
@@ -99,7 +99,7 @@ export default function DoctorPortalPage() {
       instructions: rxInstructions.trim(),
     });
 
-    toast.success(`E-Prescription for ${rxDrugName} issued to ${rxPatientName} with MDCN stamp (${newRx.qrCodeRef})!`);
+    toast.success(`E-Prescription for ${rxDrugName} issued to ${rxPatientName} with MDCN seal (${newRx.qrCodeRef})!`);
     setRxDrugName("");
     setRxPatientName("");
   };
@@ -108,7 +108,7 @@ export default function DoctorPortalPage() {
     const nextState = !isAvailable;
     setIsAvailable(nextState);
     updateProfile({ isAvailable: nextState });
-    toast.info(nextState ? "Status: Online & Receiving Patients." : "Status: Offline.");
+    toast.info(nextState ? "Status: Online & Ready for Patients." : "Status: Offline.");
   };
 
   return (
@@ -208,8 +208,10 @@ export default function DoctorPortalPage() {
                 <Star className="w-6 h-6 fill-amber-400" />
               </div>
               <div>
-                <span className="text-xs font-medium text-slate-500">MDCN Rating</span>
-                <h3 className="text-2xl font-bold text-slate-900 font-heading">5.0 ★ <span className="text-xs font-normal text-slate-400">Verified</span></h3>
+                <span className="text-xs font-medium text-slate-500">MDCN Status</span>
+                <h3 className="text-xl font-bold text-slate-900 font-heading">
+                  {isVerified ? "Verified Practitioner" : "Under Review"}
+                </h3>
               </div>
             </div>
           </div>
@@ -223,7 +225,7 @@ export default function DoctorPortalPage() {
                 activeTab === "queue" ? "bg-[#1E3A5F] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              <Calendar className="w-4 h-4" /> Live Consultations &amp; Waiting Room ({doctorConsultations.length})
+              <Calendar className="w-4 h-4" /> Live Waiting Room ({doctorConsultations.length})
             </button>
             <button
               type="button"
@@ -263,16 +265,20 @@ export default function DoctorPortalPage() {
                   <p className="text-xs text-slate-500">Live consultations linked directly to your clinical room</p>
                 </div>
                 <span className="text-xs bg-teal-50 text-teal-700 px-3 py-1 rounded-full font-semibold border border-teal-200">
-                  ● Real-time Live Synchronized
+                  ● Live Queue Ready
                 </span>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
                 {doctorConsultations.length === 0 ? (
-                  <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500">
-                    <Users className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="font-semibold text-sm text-slate-700">No patients in waiting room right now.</p>
-                    <p className="text-xs text-slate-400 mt-1">Keep your availability status online to receive real-time consultation requests.</p>
+                  <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 space-y-3">
+                    <Users className="w-10 h-10 text-slate-300 mx-auto" />
+                    <div>
+                      <h3 className="font-bold text-base text-slate-800">Your Consultation Queue is Clear</h3>
+                      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                        There are no active patients in your waiting room at the moment. As patients book consultations or are triaged through ILERTI AI, they will appear here in real time.
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   doctorConsultations.map((pat) => (
@@ -285,7 +291,7 @@ export default function DoctorPortalPage() {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-start gap-3.5">
                           <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 font-bold flex items-center justify-center shrink-0 text-base border border-teal-100">
-                            {pat.patientName[0]}
+                            {pat.patientName[0] || "P"}
                           </div>
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
@@ -317,7 +323,7 @@ export default function DoctorPortalPage() {
                               <span className="flex items-center gap-1 font-semibold text-teal-700">
                                 <Clock className="w-3.5 h-3.5" /> {pat.scheduledAt}
                               </span>
-                              <span>• Fee: <strong>₦{(pat.amountPaid || 10000).toLocaleString()}</strong></span>
+                              <span>• Fee: <strong>₦{(pat.amountPaid || 0).toLocaleString()}</strong></span>
                               <span className="font-mono text-[11px] text-slate-400">Ref: {pat.paymentReference}</span>
                             </div>
                           </div>
@@ -354,7 +360,7 @@ export default function DoctorPortalPage() {
                         type="text"
                         value={rxPatientName}
                         onChange={(e) => setRxPatientName(e.target.value)}
-                        placeholder="e.g. Chinedu Okafor"
+                        placeholder="e.g. Patient Name"
                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none"
                         required
                       />
@@ -442,7 +448,11 @@ export default function DoctorPortalPage() {
                   </h3>
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                     {doctorPrescriptions.length === 0 ? (
-                      <p className="text-xs text-slate-400 text-center py-4">No prescriptions issued yet.</p>
+                      <div className="text-center py-10 text-slate-400 space-y-1">
+                        <Pill className="w-6 h-6 mx-auto text-slate-300" />
+                        <p className="text-xs">No prescriptions issued yet.</p>
+                        <p className="text-[10px]">Prescriptions issued from the form will appear here with cryptographic MDCN seals.</p>
+                      </div>
                     ) : (
                       doctorPrescriptions.map((item) => (
                         <div key={item.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-1">
@@ -476,8 +486,9 @@ export default function DoctorPortalPage() {
                   </div>
                   <button
                     type="button"
+                    disabled={netEarnings === 0}
                     onClick={() => toast.success(`Payout request of ₦${netEarnings.toLocaleString()} submitted for bank settlement.`)}
-                    className="px-5 py-2.5 bg-[#0D9488] text-white text-xs font-bold rounded-xl hover:bg-[#0f766e] transition-colors shadow-sm"
+                    className="px-5 py-2.5 bg-[#0D9488] disabled:opacity-50 text-white text-xs font-bold rounded-xl hover:bg-[#0f766e] transition-colors shadow-sm"
                   >
                     Request Payout (₦{netEarnings.toLocaleString()})
                   </button>
@@ -496,8 +507,8 @@ export default function DoctorPortalPage() {
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-xs text-slate-500">Payout Account Status</span>
-                    <div className="text-base font-bold text-slate-900">Guaranty Trust Bank</div>
-                    <span className="text-[11px] font-mono text-slate-500">0123456789 • {doctorName}</span>
+                    <div className="text-base font-bold text-slate-900">Bank Transfer</div>
+                    <span className="text-[11px] text-slate-500">Automated Direct Deposit</span>
                   </div>
                 </div>
               </div>
@@ -527,9 +538,17 @@ export default function DoctorPortalPage() {
                   <span className="font-semibold text-slate-800">{hospitalAffiliation}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-slate-100">
-                  <span className="text-slate-500">Annual Practicing License:</span>
-                  <span className="text-[#0D9488] font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" /> Validated (2026 MDCN Registry)
+                  <span className="text-slate-500">Practicing Status:</span>
+                  <span className={isVerified ? "text-[#0D9488] font-bold flex items-center gap-1" : "text-amber-600 font-bold flex items-center gap-1"}>
+                    {isVerified ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" /> Validated (2026 MDCN Registry)
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-4 h-4" /> Verification Pending
+                      </>
+                    )}
                   </span>
                 </div>
               </div>

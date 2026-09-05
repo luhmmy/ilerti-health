@@ -1,50 +1,54 @@
 "use client";
 
-import { Shield, Lock, Smartphone, Key, UserCheck, AlertTriangle } from "lucide-react";
+import { Shield, Lock, Smartphone, Key, UserCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { GoogleAuthQr } from "@/components/auth/GoogleAuthQr";
 
 export default function SecretSecurityPage() {
   const auditLogs = [
-    { id: 1, action: "Admin Session Authenticated (2FA Verified)", ip: "102.89.44.12 (Lagos, NG)", timestamp: "Today, 11:42 AM", status: "success" },
-    { id: 2, action: "User Account Banned (ID: u-5, Fraud Alert)", ip: "102.89.44.12 (Lagos, NG)", timestamp: "Yesterday, 04:15 PM", status: "critical" },
-    { id: 3, action: "Doctor MDCN Folio Verified (Dr. Adebayo)", ip: "197.210.55.8 (Abuja, NG)", timestamp: "Sep 04, 2026, 09:30 AM", status: "success" },
-    { id: 4, action: "Failed Access Attempt to /admin", ip: "41.203.77.10 (Unknown)", timestamp: "Sep 03, 2026, 02:10 AM", status: "warning" },
+    { id: 1, action: "Admin Session Authenticated (Google Authenticator Verified)", ip: "102.89.44.12 (Lagos, NG)", timestamp: "Live Active Session", status: "success" },
+    { id: 2, action: "System Fresh Start / Database Reset Triggered", ip: "System Local Core", timestamp: "Current Cycle", status: "critical" },
+    { id: 3, action: "MDCN Cryptographic Signatures Synchronized", ip: "197.210.55.8 (Abuja, NG)", timestamp: "2026 Registry", status: "success" },
   ];
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#1E3A5F]">Security & 2FA Governance</h1>
-        <p className="text-gray-600 mt-2">Manage multi-factor keys, obfuscated endpoint rotation, and security audit logs.</p>
+        <h1 className="text-3xl font-bold text-[#1E3A5F]">Security &amp; Google Authenticator Governance</h1>
+        <p className="text-gray-600 mt-2">Manage Google Authenticator MFA, cryptographic tokens, and administrative audit logs.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {/* Google Authenticator Card */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-[#CCFBF1] text-[#0D9488] rounded-xl">
               <Smartphone className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">MFA / 2FA Enforcement Status</h2>
-              <p className="text-xs text-gray-500">Required for all administrator logins</p>
+              <h2 className="font-bold text-gray-900">Google Authenticator (2FA)</h2>
+              <p className="text-xs text-gray-500">RFC 6238 Time-based One-Time Password</p>
             </div>
           </div>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">2FA Method:</span>
-              <span className="font-semibold text-gray-900">TOTP Authenticator & SMS</span>
+              <span className="text-gray-600">Enforcement:</span>
+              <span className="font-bold text-emerald-600 flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> Active &amp; Enforced
+              </span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Session Expiration:</span>
-              <span className="font-semibold text-gray-900">4 Hours</span>
+              <span className="text-gray-600">Inactivity Auto-Lock:</span>
+              <span className="font-semibold text-gray-900">15 Minutes</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-gray-600">Current Secret Slug:</span>
+              <span className="text-gray-600">Obfuscated Route:</span>
               <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-[#0D9488] font-bold">/console-x9k2v-sys</code>
             </div>
           </div>
         </div>
 
+        {/* Master Passkey Card */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
@@ -58,10 +62,16 @@ export default function SecretSecurityPage() {
           <p className="text-xs text-gray-600 mb-4">
             If authenticator device is lost, use the system master passkey to re-authenticate:
           </p>
-          <div className="p-3 bg-slate-900 text-[#4ADE80] font-mono text-sm font-bold rounded-xl text-center tracking-wider mb-4">
+          <div className="p-3 bg-slate-900 text-[#4ADE80] font-mono text-sm font-bold rounded-xl text-center tracking-wider mb-2">
             ILERTI-ADMIN-2025
           </div>
+          <p className="text-[11px] text-gray-400 text-center">Store in a secure corporate password vault.</p>
         </div>
+      </div>
+
+      {/* QR Code Setup Helper in Security Section */}
+      <div className="mb-8">
+        <GoogleAuthQr />
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">

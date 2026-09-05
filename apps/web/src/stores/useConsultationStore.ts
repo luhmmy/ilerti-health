@@ -48,98 +48,12 @@ interface ConsultationStoreState {
   issuePrescription: (data: Omit<EPrescription, 'id' | 'issuedAt' | 'qrCodeRef'>) => EPrescription;
   getDoctorConsultations: (doctorId: string) => ConsultationRecord[];
   getPatientConsultations: (patientIdOrName: string) => ConsultationRecord[];
+  wipeAllConsultations: () => void;
 }
 
-const initialConsultations: ConsultationRecord[] = [
-  {
-    id: 'c-101',
-    patientId: 'u-1',
-    patientName: 'Chinedu Okafor',
-    patientAge: 34,
-    patientGender: 'Male',
-    doctorId: '1',
-    doctorName: 'Dr. Adebayo Ogunlesi',
-    doctorSpecialty: 'Cardiology',
-    type: 'VIDEO',
-    status: 'WAITING',
-    urgency: 'HIGH',
-    chiefComplaint: 'Severe fever, recurrent chills, chest discomfort and joint pain for 3 days.',
-    scheduledAt: 'Now • Live in Waiting Room',
-    amountPaid: 10000,
-    paymentReference: 'ILR-PAY-892401',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'c-102',
-    patientId: 'u-3',
-    patientName: 'Amina Yusuf',
-    patientAge: 28,
-    patientGender: 'Female',
-    doctorId: '1',
-    doctorName: 'Dr. Adebayo Ogunlesi',
-    doctorSpecialty: 'Cardiology',
-    type: 'VIDEO',
-    status: 'SCHEDULED',
-    urgency: 'MEDIUM',
-    chiefComplaint: 'Follow-up on gestational blood pressure and routine antenatal cardiovascular check.',
-    scheduledAt: 'Today • 2:30 PM',
-    amountPaid: 12000,
-    paymentReference: 'ILR-PAY-918234',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'c-103',
-    patientId: 'u-7',
-    patientName: 'Ngozi Eze',
-    patientAge: 22,
-    patientGender: 'Female',
-    doctorId: '2',
-    doctorName: 'Dr. Fatima Al-Hassan',
-    doctorSpecialty: 'Paediatrics',
-    type: 'AUDIO',
-    status: 'SCHEDULED',
-    urgency: 'MEDIUM',
-    chiefComplaint: 'Acute allergic rash and itching after new medication.',
-    scheduledAt: 'Today • 4:15 PM',
-    amountPaid: 8000,
-    paymentReference: 'ILR-PAY-723910',
-    createdAt: new Date().toISOString(),
-  },
-];
-
-const initialPrescriptions: EPrescription[] = [
-  {
-    id: 'rx-101',
-    consultationId: 'c-101',
-    doctorId: '1',
-    doctorName: 'Dr. Adebayo Ogunlesi',
-    doctorMdcnFolio: 'MDCN/2014/41209',
-    doctorSpecialty: 'Cardiology',
-    patientName: 'Chinedu Okafor',
-    medicationName: 'Artemether-Lumefantrine (Coartem) 80/480mg',
-    dosage: '1 Tablet',
-    frequency: 'Twice Daily (BD)',
-    duration: '3 Days',
-    instructions: 'Take after fatty food or full meal for optimal malaria eradication.',
-    issuedAt: '2026-09-04T10:30:00Z',
-    qrCodeRef: 'MDCN-RX-892401',
-  },
-  {
-    id: 'rx-102',
-    doctorId: '1',
-    doctorName: 'Dr. Adebayo Ogunlesi',
-    doctorMdcnFolio: 'MDCN/2014/41209',
-    doctorSpecialty: 'Cardiology',
-    patientName: 'Babajide Adeleke',
-    medicationName: 'Amlodipine 5mg',
-    dosage: '5mg',
-    frequency: 'Once Daily (OD)',
-    duration: '30 Days',
-    instructions: 'Take every morning to maintain target blood pressure < 130/80 mmHg.',
-    issuedAt: '2026-09-03T14:15:00Z',
-    qrCodeRef: 'MDCN-RX-991204',
-  },
-];
+// Clean production start - zero dummy/test consultations or prescriptions
+const initialConsultations: ConsultationRecord[] = [];
+const initialPrescriptions: EPrescription[] = [];
 
 export const useConsultationStore = create<ConsultationStoreState>()(
   persist(
@@ -198,9 +112,13 @@ export const useConsultationStore = create<ConsultationStoreState>()(
             c.patientName.toLowerCase().includes(patientIdOrName.toLowerCase())
         );
       },
+
+      wipeAllConsultations: () => {
+        set({ consultations: [], prescriptions: [] });
+      },
     }),
     {
-      name: 'ilerti-consultations-vault',
+      name: 'ilerti-consultations-vault-v2', // Updated key for clean fresh production state
     }
   )
 );
