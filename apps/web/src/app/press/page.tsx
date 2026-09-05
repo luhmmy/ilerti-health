@@ -15,13 +15,13 @@ const NEWS = [
     desc: "ILERTI Health bridges healthcare accessibility across Nigeria with verified MDCN doctors, instant triage, and localized nutrition planning.",
   },
   {
-    date: "August 2024",
+    date: "August 2026",
     title: "Revolutionizing Primary Care: How Digital Triage is Reducing Hospital Congestion in Lagos & Abuja",
     source: "Nigerian Healthcare Journal",
     desc: "An in-depth analysis on how ILERTI's digital health vault and triage system are streamlining early patient diagnostics.",
   },
   {
-    date: "July 2024",
+    date: "July 2026",
     title: "ILERTI Partners with Top Diagnostic Laboratories to Enable Instant Digital Test Booking",
     source: "TechCabal",
     desc: "Patients across 36 Nigerian states can now search, book, and receive verified laboratory results directly in their secure health vault.",

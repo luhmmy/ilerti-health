@@ -17,7 +17,7 @@ export default function TermsPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-navy-900">
             Terms of Service & Clinical Care Guidelines
           </h1>
-          <p className="text-xs text-navy-500 mt-2">Last Updated: September 2024</p>
+          <p className="text-xs text-navy-500 mt-2">Last Updated: September 2026</p>
         </div>
       </section>
 

@@ -6,244 +6,266 @@ import { Footer } from "@/components/layout/Footer";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ScrollReveal } from "@/components/marketing/ScrollReveal";
 import { 
-  Stethoscope, Activity, FileText, Pill, 
-  Baby, HeartPulse, Brain, Apple, ArrowRight,
-  ShieldCheck, MessageSquare, Video, Shield,
-  LayoutDashboard
+  Stethoscope, 
+  Sparkles, 
+  Building2, 
+  Pill, 
+  Apple, 
+  HeartPulse, 
+  ArrowRight,
+  ShieldCheck, 
+  Video, 
+  FileText,
+  LayoutDashboard,
+  CheckCircle2
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function Home() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
-  const healthOptions = [
-    { icon: Activity, title: "AI Symptom Checker", desc: "Interactive AI navigation & triage", color: "text-primary-500", bg: "bg-primary-50", href: isAuthenticated ? "/ai" : "/signup" },
-    { icon: Stethoscope, title: "Find a Doctor", desc: "Book verified specialists", color: "text-blue-500", bg: "bg-blue-50", href: isAuthenticated ? "/doctors" : "/signup" },
-    { icon: FileText, title: "Lab & Diagnostic Tests", desc: "Find accredited diagnostic labs", color: "text-purple-500", bg: "bg-purple-50", href: isAuthenticated ? "/facilities" : "/signup" },
-    { icon: Pill, title: "Medication Reminders", desc: "Track doses & prescriptions", color: "text-accent-500", bg: "bg-accent-50", href: isAuthenticated ? "/health/medications" : "/signup" },
-    { icon: Baby, title: "Maternal Care", desc: "Pregnancy & childcare plans", color: "text-pink-500", bg: "bg-pink-50", href: isAuthenticated ? "/wellness/plans" : "/signup" },
-    { icon: HeartPulse, title: "Chronic Care", desc: "Diabetes & hypertension support", color: "text-red-500", bg: "bg-red-50", href: isAuthenticated ? "/wellness/plans" : "/signup" },
-    { icon: Brain, title: "Mental Health", desc: "Therapy & clinical support", color: "text-indigo-500", bg: "bg-indigo-50", href: isAuthenticated ? "/doctors?specialty=Psychiatry" : "/signup" },
-    { icon: Apple, title: "Nigerian Nutrition", desc: "Localized healthy meal plans", color: "text-orange-500", bg: "bg-orange-50", href: isAuthenticated ? "/wellness/nutrition" : "/signup" },
+  const quickServices = [
+    { 
+      icon: Sparkles, 
+      title: "AI Symptom Triage", 
+      desc: "Instant guidance & urgency rating", 
+      badge: "Fast & Free",
+      color: "text-amber-500", 
+      bg: "bg-amber-50", 
+      border: "border-amber-100",
+      href: isAuthenticated ? "/ai" : "/signup" 
+    },
+    { 
+      icon: Stethoscope, 
+      title: "Verified Doctors", 
+      desc: "Consult MDCN specialists", 
+      badge: "Video / Chat",
+      color: "text-teal-600", 
+      bg: "bg-teal-50", 
+      border: "border-teal-100",
+      href: isAuthenticated ? "/doctors" : "/signup" 
+    },
+    { 
+      icon: Building2, 
+      title: "Hospitals & Labs", 
+      desc: "Accredited centres near you", 
+      badge: "36 States",
+      color: "text-blue-600", 
+      bg: "bg-blue-50", 
+      border: "border-blue-100",
+      href: isAuthenticated ? "/facilities" : "/signup" 
+    },
+    { 
+      icon: FileText, 
+      title: "Health Records", 
+      desc: "Secure lifetime health vault", 
+      badge: "NDPR Encrypted",
+      color: "text-purple-600", 
+      bg: "bg-purple-50", 
+      border: "border-purple-100",
+      href: isAuthenticated ? "/health" : "/signup" 
+    },
+    { 
+      icon: Pill, 
+      title: "Medications", 
+      desc: "Dosage & refill alerts", 
+      badge: "Smart Reminders",
+      color: "text-emerald-600", 
+      bg: "bg-emerald-50", 
+      border: "border-emerald-100",
+      href: isAuthenticated ? "/health/medications" : "/signup" 
+    },
+    { 
+      icon: Apple, 
+      title: "Nigerian Nutrition", 
+      desc: "Local dietary meal plans", 
+      badge: "Custom Meals",
+      color: "text-orange-500", 
+      bg: "bg-orange-50", 
+      border: "border-orange-100",
+      href: isAuthenticated ? "/wellness/nutrition" : "/signup" 
+    }
   ];
 
   return (
-    <main className="flex-1">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary-50/50 to-white -z-10" />
-        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[600px] h-[600px] bg-primary-100/40 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/4 w-[400px] h-[400px] bg-accent-100/30 rounded-full blur-3xl -z-10" />
-        
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <ScrollReveal>
-              <div className="flex justify-center mb-8">
-                <BrandLogo size="xl" withLink={false} />
-              </div>
-              <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-navy-900 leading-tight mb-6 tracking-tight">
-                Your Health Journey <br className="hidden md:block" />
-                <span className="text-primary-600">Starts Here</span>
-              </h1>
-            </ScrollReveal>
-            
-            <ScrollReveal delay={0.1}>
-              <p className="text-lg md:text-xl text-navy-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                ILERTI connects you to trusted health information, verified doctors, healthcare facilities, and personalized wellness — all in one place.
-              </p>
-            </ScrollReveal>
-            
-            <ScrollReveal delay={0.2}>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                {isAuthenticated ? (
-                  <>
-                    <Button size="xl" asChild className="w-full sm:w-auto shadow-lg shadow-primary-500/20 text-md">
-                      <Link href="/dashboard">
-                        <LayoutDashboard className="w-5 h-5 mr-2" /> Go to Dashboard
-                      </Link>
-                    </Button>
-                    <Button size="xl" variant="outline" asChild className="w-full sm:w-auto bg-white text-md">
-                      <Link href="/ai">✨ AI Triage Navigator</Link>
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button size="xl" asChild className="w-full sm:w-auto shadow-lg shadow-primary-500/20 text-md">
-                      <Link href="/signup">✨ Create Free Account</Link>
-                    </Button>
-                    <Button size="xl" variant="outline" asChild className="w-full sm:w-auto bg-white text-md">
-                      <Link href="/login">Sign In</Link>
-                    </Button>
-                  </>
-                )}
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
-      {/* Options Grid Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <ScrollReveal>
-            <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-navy-900 mb-4">
-                What can we help you with today?
-              </h2>
-              <p className="text-navy-600">Select an option to begin your personalized health journey.</p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-            {healthOptions.map((item, index) => (
-              <ScrollReveal key={item.title} delay={index * 0.05}>
-                <Link href={item.href}>
-                  <Card className="h-full hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 group cursor-pointer border-navy-100">
-                    <CardContent className="p-6 flex flex-col items-start">
-                      <div className={`p-3 rounded-xl ${item.bg} ${item.color} mb-4 group-hover:scale-110 transition-transform`}>
-                        <item.icon className="h-6 w-6" />
-                      </div>
-                      <h3 className="font-heading font-semibold text-lg text-navy-900 mb-1 group-hover:text-primary-600 transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-navy-500 text-sm mb-4 flex-1">
-                        {item.desc}
-                      </p>
-                      <div className="mt-auto flex items-center text-sm font-medium text-primary-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
-                        Get started <ArrowRight className="ml-1 h-4 w-4" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-20 bg-navy-50">
-        <div className="container mx-auto px-4 md:px-6">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-navy-900 mb-4">
-                How It Works
-              </h2>
-              <p className="text-navy-600 max-w-2xl mx-auto">
-                A seamless experience designed to get you the care you need, when you need it.
-              </p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto relative">
-            <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-navy-200 z-0 border-t-2 border-dashed border-navy-200"></div>
-            
-            {[
-              { icon: MessageSquare, title: "Tell us how you feel", desc: "Use our AI navigation or chat with a care guide." },
-              { icon: ShieldCheck, title: "Get matched", desc: "We connect you with the right verified professional." },
-              { icon: Video, title: "Consult easily", desc: "Connect via secure chat, audio, or video call." },
-              { icon: Activity, title: "Continue your journey", desc: "Receive follow-ups and ongoing health support." }
-            ].map((step, i) => (
-              <ScrollReveal key={i} delay={i * 0.1} className="relative z-10 text-center">
-                <div className="w-20 h-20 mx-auto bg-white rounded-2xl shadow-sm border border-navy-100 flex items-center justify-center mb-6">
-                  <step.icon className="h-8 w-8 text-primary-600" />
-                </div>
-                <div className="bg-primary-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold absolute top-16 right-1/2 translate-x-10 -translate-y-2 border-2 border-white">
-                  {i + 1}
-                </div>
-                <h3 className="font-heading font-semibold text-lg text-navy-900 mb-2">{step.title}</h3>
-                <p className="text-navy-600 text-sm">{step.desc}</p>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-20 bg-primary-600 text-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <ScrollReveal>
-            <div className="text-center mb-12">
-              <h2 className="font-heading text-2xl md:text-3xl font-bold mb-4">Trusted by thousands across Nigeria</h2>
-            </div>
-          </ScrollReveal>
+      {/* Streamlined Hero Section */}
+      <section className="relative pt-8 pb-10 md:pt-16 md:pb-16 overflow-hidden bg-gradient-to-b from-teal-50/50 via-white to-slate-50/40 border-b border-slate-100">
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl text-center">
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center">
-            {[
-              { label: "Verified Doctors", value: "2,000+" },
-              { label: "Healthcare Facilities", value: "500+" },
-              { label: "Health Journeys", value: "50k+" },
-              { label: "States Covered", value: "36" }
-            ].map((stat, i) => (
-              <ScrollReveal key={i} delay={i * 0.1}>
-                <div className="text-4xl md:text-5xl font-bold font-heading mb-2">{stat.value}</div>
-                <div className="text-primary-100 text-sm md:text-base font-medium">{stat.label}</div>
-              </ScrollReveal>
-            ))}
+          {/* Trust Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal-100/70 text-teal-800 border border-teal-200/80 mb-4 animate-in fade-in">
+            <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+            <span>Nigeria&apos;s Digital Health &amp; Prevention Ecosystem</span>
           </div>
+
+          <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl font-extrabold text-[#1E3A5F] tracking-tight leading-tight mb-3">
+            Your Health Journey <br className="hidden sm:inline" />
+            <span className="text-[#0D9488]">Starts Here</span>
+          </h1>
+
+          <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl mx-auto mb-6 leading-relaxed">
+            Instant AI triage, verified MDCN doctors, nearby accredited clinics, and personalized Nigerian wellness — in one unified app.
+          </p>
+
+          {/* Direct Hero CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+            {isAuthenticated ? (
+              <>
+                <Button asChild size="lg" className="w-full sm:w-auto bg-[#0D9488] hover:bg-[#0f766e] text-white shadow-md text-sm font-bold">
+                  <Link href={user?.role === "doctor" ? "/doctor-portal" : "/dashboard"}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" /> 
+                    {user?.role === "doctor" ? "Open Doctor Portal" : "Go to Dashboard"}
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="w-full sm:w-auto text-sm border-slate-300">
+                  <Link href="/ai">
+                    <Sparkles className="w-4 h-4 mr-1.5 text-amber-500" /> AI Symptom Checker
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild size="lg" className="w-full sm:w-auto bg-[#0D9488] hover:bg-[#0f766e] text-white shadow-md text-sm font-bold">
+                  <Link href="/signup">
+                    <Sparkles className="w-4 h-4 mr-1.5 text-amber-300" /> Get Started Free
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="w-full sm:w-auto text-sm border-slate-300 bg-white">
+                  <Link href="/doctors">
+                    <Stethoscope className="w-4 h-4 mr-1.5 text-teal-600" /> Find Verified Doctors
+                  </Link>
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Quick Stat Ribbon */}
+          <div className="mt-8 pt-6 border-t border-slate-200/60 grid grid-cols-3 gap-2 max-w-xl mx-auto text-center text-xs">
+            <div>
+              <div className="font-bold text-slate-900 text-sm sm:text-base font-heading">2,000+</div>
+              <div className="text-slate-500 text-[11px]">MDCN Doctors</div>
+            </div>
+            <div className="border-x border-slate-200">
+              <div className="font-bold text-slate-900 text-sm sm:text-base font-heading">500+</div>
+              <div className="text-slate-500 text-[11px]">Hospitals &amp; Labs</div>
+            </div>
+            <div>
+              <div className="font-bold text-slate-900 text-sm sm:text-base font-heading">36 States</div>
+              <div className="text-slate-500 text-[11px]">Nationwide Coverage</div>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
-            {[
-              { 
-                icon: Brain, 
-                title: "AI Health Navigation", 
-                desc: "Describe your symptoms to our intelligent assistant and get directed to the right level of care immediately."
-              },
-              { 
-                icon: Shield, 
-                title: "Verified Network", 
-                desc: "Every doctor and facility on ILERTI is thoroughly vetted to ensure you receive the highest quality of care."
-              },
-              { 
-                icon: HeartPulse, 
-                title: "Complete Journey", 
-                desc: "From symptoms to diagnosis, prescriptions, and follow-ups. We manage your entire healthcare experience."
-              }
-            ].map((feature, i) => (
-              <ScrollReveal key={i} delay={i * 0.1} className="flex flex-col items-start">
-                <div className="p-4 bg-primary-50 rounded-2xl mb-6 text-primary-600">
-                  <feature.icon className="h-8 w-8" />
+      {/* Compact Services Grid (Optimized for Mobile) */}
+      <section className="py-8 sm:py-12 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-2">
+            <div>
+              <h2 className="font-heading text-xl sm:text-2xl font-bold text-[#1E3A5F]">
+                Healthcare Services
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500">Fast, accessible medical support designed for you</p>
+            </div>
+            <Link href="/pricing" className="text-xs font-semibold text-teal-600 hover:underline flex items-center gap-1">
+              View Membership Plans <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* 2-Column Mobile Grid for minimal scrolling */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            {quickServices.map((srv, idx) => (
+              <Link 
+                key={idx} 
+                href={srv.href}
+                className="group p-3.5 sm:p-5 rounded-2xl border border-slate-200 hover:border-teal-400 bg-white hover:bg-teal-50/20 transition-all shadow-xs hover:shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${srv.bg} ${srv.color} flex items-center justify-center`}>
+                      <srv.icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-400 group-hover:text-teal-700 transition-colors hidden sm:inline">
+                      {srv.badge}
+                    </span>
+                  </div>
+                  <h3 className="font-heading font-bold text-sm sm:text-base text-slate-900 group-hover:text-teal-700 transition-colors leading-tight mb-1">
+                    {srv.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                    {srv.desc}
+                  </p>
                 </div>
-                <h3 className="font-heading text-xl font-bold text-navy-900 mb-3">{feature.title}</h3>
-                <p className="text-navy-600 leading-relaxed">{feature.desc}</p>
-              </ScrollReveal>
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center text-[11px] font-semibold text-teal-600">
+                  <span>Open</span>
+                  <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 bg-navy-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary-400 via-navy-900 to-navy-900"></div>
-        <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
-          <ScrollReveal>
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-white mb-6">
-              Ready to take control of your health?
+      {/* 3-Step Simple Flow */}
+      <section className="py-8 sm:py-12 bg-slate-50 border-y border-slate-100">
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="font-heading text-xl sm:text-2xl font-bold text-[#1E3A5F]">
+              How ILERTI Works
             </h2>
-            <p className="text-navy-200 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-              Join thousands of Nigerians on their health journey. Get access to verified doctors, seamless care, and personalized wellness.
-            </p>
-            <Button size="xl" asChild className="bg-primary-600 hover:bg-primary-500 text-white border-none text-lg px-8 shadow-xl cursor-pointer">
-              {isAuthenticated ? (
-                <Link href="/dashboard">Go to Your Dashboard</Link>
-              ) : (
-                <Link href="/signup">Create Your Free Account</Link>
-              )}
-            </Button>
-          </ScrollReveal>
+            <p className="text-xs sm:text-sm text-slate-500">From symptoms to care in 3 simple steps</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-teal-50 text-teal-700 font-bold flex items-center justify-center mb-3 text-sm">
+                1
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 mb-1">Describe Symptoms</h3>
+              <p className="text-xs text-slate-500">Our AI triage evaluates urgency and recommends next steps.</p>
+            </div>
+
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-teal-50 text-teal-700 font-bold flex items-center justify-center mb-3 text-sm">
+                2
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 mb-1">Consult a Doctor</h3>
+              <p className="text-xs text-slate-500">Connect with verified MDCN doctors via secure video or chat.</p>
+            </div>
+
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-teal-50 text-teal-700 font-bold flex items-center justify-center mb-3 text-sm">
+                3
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 mb-1">Receive Digital Care</h3>
+              <p className="text-xs text-slate-500">Get E-Prescriptions, lab referrals, and personalized Nigerian wellness.</p>
+            </div>
+          </div>
         </div>
       </section>
-      
+
+      {/* Compact Doctor & Provider CTA Ribbon */}
+      <section className="py-8 bg-[#1E3A5F] text-white">
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4ADE80] uppercase tracking-wider mb-1">
+              <Stethoscope className="w-3.5 h-3.5" /> For Medical Doctors &amp; Clinics
+            </span>
+            <h3 className="text-lg sm:text-xl font-bold font-heading">Are you an MDCN licensed practitioner?</h3>
+            <p className="text-xs text-blue-100">Join our telemedicine network to consult patients, issue digital prescriptions, and grow your practice.</p>
+          </div>
+          <Button asChild className="bg-[#0D9488] hover:bg-[#0f766e] text-white shrink-0 text-xs font-bold px-5 py-2 rounded-xl">
+            <Link href="/signup">Register as Doctor</Link>
+          </Button>
+        </div>
+      </section>
+
       <Footer />
-    </main>
+    </div>
   );
 }

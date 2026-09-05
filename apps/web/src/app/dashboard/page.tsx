@@ -15,6 +15,7 @@ import { HydrationScannerModal } from "@/components/wellness/HydrationScannerMod
 import { EditVitalsModal } from "@/components/profile/EditVitalsModal";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
@@ -63,6 +64,26 @@ export default function DashboardPage() {
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           
+          {/* Doctor Portal Quick Switch Banner (If Doctor) */}
+          {user?.role === "doctor" && (
+            <div className="bg-teal-900 text-white p-4 sm:p-5 rounded-2xl border border-teal-500/40 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-[#4ADE80] border border-teal-400/30 flex items-center justify-center shrink-0">
+                  <Stethoscope className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-white">MDCN Practitioner Account Active</h3>
+                  <p className="text-xs text-teal-200">Switch to the specialized Doctor Portal to manage your waiting room, consult queue, and e-prescriptions.</p>
+                </div>
+              </div>
+              <Button asChild className="bg-[#0D9488] hover:bg-[#0f766e] text-white text-xs font-bold px-5 py-2.5 rounded-xl shrink-0">
+                <Link href="/doctor-portal">
+                  Open Doctor Portal <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                </Link>
+              </Button>
+            </div>
+          )}
+
           {/* Dynamic Welcome Banner */}
           <div className="bg-[#1E3A5F] rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">

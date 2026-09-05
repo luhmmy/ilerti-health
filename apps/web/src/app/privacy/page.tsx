@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-navy-900">
             Privacy Policy & Health Data Protection
           </h1>
-          <p className="text-xs text-navy-500 mt-2">Effective Date: January 1, 2024 • Last Updated: September 2024</p>
+          <p className="text-xs text-navy-500 mt-2">Effective Date: January 1, 2026 • Last Updated: September 2026</p>
         </div>
       </section>
 

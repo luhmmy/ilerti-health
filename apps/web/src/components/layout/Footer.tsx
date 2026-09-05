@@ -62,7 +62,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-navy-100 text-center text-sm text-navy-500 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>© 2024 ILERTI Health. All rights reserved.</p>
+          <p>© 2026 ILERTI Health. All rights reserved.</p>
           <p>Made with care for Nigeria 🇳🇬</p>
         </div>
       </div>
