@@ -20,6 +20,7 @@ import {
   BookOpen
 } from "lucide-react";
 import Link from "next/link";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const PILLARS = [
   {
@@ -88,6 +89,8 @@ const VALUES = [
 ];
 
 export default function AboutPage() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
@@ -106,15 +109,26 @@ export default function AboutPage() {
             ILERTI Health is a digital health ecosystem built to provide accessible, preventive, and patient-centered healthcare for every Nigerian — from symptom triage to verified specialist care and daily wellness.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Button size="lg" asChild className="bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-md">
-              <Link href="/signup">
-                Get Started Free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="bg-white">
-              <Link href="/login">Sign In to Account</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button size="lg" asChild className="bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-md">
+                <Link href="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" asChild className="bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-md">
+                  <Link href="/signup">
+                    Get Started Free
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="bg-white">
+                  <Link href="/login">Sign In to Account</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -224,7 +238,11 @@ export default function AboutPage() {
                   </p>
                 </div>
                 <Button size="sm" asChild className="w-full bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs mt-4">
-                  <Link href="/signup">Create Free Account</Link>
+                  {isAuthenticated ? (
+                    <Link href="/dashboard">Go to Dashboard</Link>
+                  ) : (
+                    <Link href="/signup">Create Free Account</Link>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -269,12 +287,20 @@ export default function AboutPage() {
             Create your free ILERTI account today to access AI symptom triage, consult verified physicians, and track your personalized wellness.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" asChild className="bg-teal-500 hover:bg-teal-400 text-navy-950 font-bold text-base px-8 shadow-lg">
-              <Link href="/signup">Create Your Free Account</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="text-white border-slate-600 hover:bg-navy-800">
-              <Link href="/login">Sign In</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button size="lg" asChild className="bg-teal-500 hover:bg-teal-400 text-navy-950 font-bold text-base px-8 shadow-lg">
+                <Link href="/dashboard">Go to Your Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" asChild className="bg-teal-500 hover:bg-teal-400 text-navy-950 font-bold text-base px-8 shadow-lg">
+                  <Link href="/signup">Create Your Free Account</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="text-white border-slate-600 hover:bg-navy-800">
+                  <Link href="/login">Sign In</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>

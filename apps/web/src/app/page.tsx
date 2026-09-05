@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -6,23 +8,27 @@ import { ScrollReveal } from "@/components/marketing/ScrollReveal";
 import { 
   Stethoscope, Activity, FileText, Pill, 
   Baby, HeartPulse, Brain, Apple, ArrowRight,
-  ShieldCheck, MessageSquare, Video, Shield
+  ShieldCheck, MessageSquare, Video, Shield,
+  LayoutDashboard
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-
-const HEALTH_JOURNEY_OPTIONS = [
-  { icon: Activity, title: "AI Symptom Checker", desc: "Interactive AI navigation & triage", color: "text-primary-500", bg: "bg-primary-50", href: "/signup" },
-  { icon: Stethoscope, title: "Find a Doctor", desc: "Book verified specialists", color: "text-blue-500", bg: "bg-blue-50", href: "/signup" },
-  { icon: FileText, title: "Lab & Diagnostic Tests", desc: "Find accredited diagnostic labs", color: "text-purple-500", bg: "bg-purple-50", href: "/signup" },
-  { icon: Pill, title: "Medication Reminders", desc: "Track doses & prescriptions", color: "text-accent-500", bg: "bg-accent-50", href: "/signup" },
-  { icon: Baby, title: "Maternal Care", desc: "Pregnancy & childcare plans", color: "text-pink-500", bg: "bg-pink-50", href: "/signup" },
-  { icon: HeartPulse, title: "Chronic Care", desc: "Diabetes & hypertension support", color: "text-red-500", bg: "bg-red-50", href: "/signup" },
-  { icon: Brain, title: "Mental Health", desc: "Therapy & clinical support", color: "text-indigo-500", bg: "bg-indigo-50", href: "/signup" },
-  { icon: Apple, title: "Nigerian Nutrition", desc: "Localized healthy meal plans", color: "text-orange-500", bg: "bg-orange-50", href: "/signup" },
-];
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function Home() {
+  const { isAuthenticated } = useAuthStore();
+
+  const healthOptions = [
+    { icon: Activity, title: "AI Symptom Checker", desc: "Interactive AI navigation & triage", color: "text-primary-500", bg: "bg-primary-50", href: isAuthenticated ? "/ai" : "/signup" },
+    { icon: Stethoscope, title: "Find a Doctor", desc: "Book verified specialists", color: "text-blue-500", bg: "bg-blue-50", href: isAuthenticated ? "/doctors" : "/signup" },
+    { icon: FileText, title: "Lab & Diagnostic Tests", desc: "Find accredited diagnostic labs", color: "text-purple-500", bg: "bg-purple-50", href: isAuthenticated ? "/facilities" : "/signup" },
+    { icon: Pill, title: "Medication Reminders", desc: "Track doses & prescriptions", color: "text-accent-500", bg: "bg-accent-50", href: isAuthenticated ? "/health/medications" : "/signup" },
+    { icon: Baby, title: "Maternal Care", desc: "Pregnancy & childcare plans", color: "text-pink-500", bg: "bg-pink-50", href: isAuthenticated ? "/wellness/plans" : "/signup" },
+    { icon: HeartPulse, title: "Chronic Care", desc: "Diabetes & hypertension support", color: "text-red-500", bg: "bg-red-50", href: isAuthenticated ? "/wellness/plans" : "/signup" },
+    { icon: Brain, title: "Mental Health", desc: "Therapy & clinical support", color: "text-indigo-500", bg: "bg-indigo-50", href: isAuthenticated ? "/doctors?specialty=Psychiatry" : "/signup" },
+    { icon: Apple, title: "Nigerian Nutrition", desc: "Localized healthy meal plans", color: "text-orange-500", bg: "bg-orange-50", href: isAuthenticated ? "/wellness/nutrition" : "/signup" },
+  ];
+
   return (
     <main className="flex-1">
       <Header />
@@ -53,12 +59,27 @@ export default function Home() {
             
             <ScrollReveal delay={0.2}>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="xl" asChild className="w-full sm:w-auto shadow-lg shadow-primary-500/20 text-md">
-                  <Link href="/signup">✨ Create Free Account</Link>
-                </Button>
-                <Button size="xl" variant="outline" asChild className="w-full sm:w-auto bg-white text-md">
-                  <Link href="/login">Sign In</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <>
+                    <Button size="xl" asChild className="w-full sm:w-auto shadow-lg shadow-primary-500/20 text-md">
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="w-5 h-5 mr-2" /> Go to Dashboard
+                      </Link>
+                    </Button>
+                    <Button size="xl" variant="outline" asChild className="w-full sm:w-auto bg-white text-md">
+                      <Link href="/ai">✨ AI Triage Navigator</Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button size="xl" asChild className="w-full sm:w-auto shadow-lg shadow-primary-500/20 text-md">
+                      <Link href="/signup">✨ Create Free Account</Link>
+                    </Button>
+                    <Button size="xl" variant="outline" asChild className="w-full sm:w-auto bg-white text-md">
+                      <Link href="/login">Sign In</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </ScrollReveal>
           </div>
@@ -78,7 +99,7 @@ export default function Home() {
           </ScrollReveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-            {HEALTH_JOURNEY_OPTIONS.map((item, index) => (
+            {healthOptions.map((item, index) => (
               <ScrollReveal key={item.title} delay={index * 0.05}>
                 <Link href={item.href}>
                   <Card className="h-full hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 group cursor-pointer border-navy-100">
@@ -212,7 +233,11 @@ export default function Home() {
               Join thousands of Nigerians on their health journey. Get access to verified doctors, seamless care, and personalized wellness.
             </p>
             <Button size="xl" asChild className="bg-primary-600 hover:bg-primary-500 text-white border-none text-lg px-8 shadow-xl cursor-pointer">
-              <Link href="/signup">Create Your Free Account</Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard">Go to Your Dashboard</Link>
+              ) : (
+                <Link href="/signup">Create Your Free Account</Link>
+              )}
             </Button>
           </ScrollReveal>
         </div>

@@ -1,8 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { Twitter, Facebook, Instagram, Linkedin } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 export function Footer() {
+  const { isAuthenticated } = useAuthStore();
+
+  const aiHref = isAuthenticated ? "/ai" : "/signup";
+  const doctorsHref = isAuthenticated ? "/doctors" : "/signup";
+  const facilitiesHref = isAuthenticated ? "/facilities" : "/signup";
+  const wellnessHref = isAuthenticated ? "/wellness" : "/signup";
+
   return (
     <footer className="bg-white border-t border-navy-100 pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
@@ -23,10 +33,10 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold text-navy-900 mb-4">Platform</h4>
             <ul className="space-y-3 text-sm text-navy-600">
-              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">AI Health Navigation</Link></li>
-              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">Verified Doctors</Link></li>
-              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">Healthcare Facilities</Link></li>
-              <li><Link href="/signup" className="hover:text-primary-600 transition-colors">Personalized Wellness</Link></li>
+              <li><Link href={aiHref} className="hover:text-primary-600 transition-colors">AI Health Navigation</Link></li>
+              <li><Link href={doctorsHref} className="hover:text-primary-600 transition-colors">Verified Doctors</Link></li>
+              <li><Link href={facilitiesHref} className="hover:text-primary-600 transition-colors">Healthcare Facilities</Link></li>
+              <li><Link href={wellnessHref} className="hover:text-primary-600 transition-colors">Personalized Wellness</Link></li>
             </ul>
           </div>
 
