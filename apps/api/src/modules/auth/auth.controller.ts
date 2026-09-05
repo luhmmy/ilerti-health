@@ -27,6 +27,11 @@ export class AuthController {
     return this.authService.resendOtp(body);
   }
 
+  @Post('wipe-database')
+  wipeDatabase() {
+    return this.authService.wipeDatabase();
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@CurrentUser() user: any) {

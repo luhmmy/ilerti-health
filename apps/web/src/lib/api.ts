@@ -75,6 +75,11 @@ export const api = {
         body: JSON.stringify(data),
       });
     },
+    wipeDatabase: async () => {
+      return await fetchJson('/auth/wipe-database', {
+        method: 'POST',
+      });
+    },
   },
   ai: {
     triage: async (input: string | { symptoms?: string; messages?: any[] }): Promise<TriageResult> => {

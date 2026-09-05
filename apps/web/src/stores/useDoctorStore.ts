@@ -27,7 +27,7 @@ interface DoctorStore {
   wipeAllDoctors: () => void;
 }
 
-// Clean production start - zero dummy/test doctors
+// 100% Pristine production slate - zero existing doctors
 const initialDoctors: Doctor[] = [];
 
 export const useDoctorStore = create<DoctorStore>()(
@@ -66,7 +66,7 @@ export const useDoctorStore = create<DoctorStore>()(
       },
     }),
     {
-      name: 'ilerti-doctor-storage-v2', // Updated key for clean fresh production state
+      name: 'ilerti-v5-doctors',
     }
   )
 );

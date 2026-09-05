@@ -31,7 +31,7 @@ interface AdminManagementStore {
   searchUsers: (query: string, roleFilter?: string, statusFilter?: string) => ManagedUser[];
 }
 
-// Clean production start - zero dummy/test accounts
+// 100% Pristine production slate - zero existing accounts
 const initialUsers: ManagedUser[] = [];
 
 export const useAdminManagementStore = create<AdminManagementStore>()(
@@ -131,7 +131,7 @@ export const useAdminManagementStore = create<AdminManagementStore>()(
       },
     }),
     {
-      name: 'ilerti-admin-management-v3',
+      name: 'ilerti-v5-users',
     }
   )
 );

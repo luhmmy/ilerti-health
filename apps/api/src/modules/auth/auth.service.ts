@@ -338,4 +338,21 @@ export class AuthService {
       },
     };
   }
+
+  async wipeDatabase() {
+    try {
+      await this.prisma.consultation.deleteMany({});
+      await this.prisma.healthRecord.deleteMany({});
+      await this.prisma.healthProfile.deleteMany({});
+      await this.prisma.wellnessPlan.deleteMany({});
+      await this.prisma.doctor.deleteMany({});
+      await this.prisma.facility.deleteMany({});
+      await this.prisma.aiConversation.deleteMany({});
+      await this.prisma.user.deleteMany({});
+      return { success: true, message: 'All database tables wiped successfully.' };
+    } catch (e: any) {
+      return { success: false, message: e.message };
+    }
+  }
 }
+

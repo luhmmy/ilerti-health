@@ -51,7 +51,7 @@ interface ConsultationStoreState {
   wipeAllConsultations: () => void;
 }
 
-// Clean production start - zero dummy/test consultations or prescriptions
+// 100% Pristine production slate - zero existing consultations or prescriptions
 const initialConsultations: ConsultationRecord[] = [];
 const initialPrescriptions: EPrescription[] = [];
 
@@ -118,7 +118,7 @@ export const useConsultationStore = create<ConsultationStoreState>()(
       },
     }),
     {
-      name: 'ilerti-consultations-vault-v2', // Updated key for clean fresh production state
+      name: 'ilerti-v5-consultations',
     }
   )
 );

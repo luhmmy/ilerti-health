@@ -38,21 +38,15 @@ interface AuthState {
   wipeAllAuthData: () => void;
 }
 
-// Clear out legacy deprecated keys on load
+// Purge all legacy storage keys across all previous versions
 if (typeof window !== 'undefined') {
-  const legacyKeys = [
-    'ilerti-auth', 
-    'ilerti-auth-v2',
-    'ilerti-admin-management', 
-    'ilerti-admin-management-v2',
-    'ilerti-doctor-storage', 
-    'ilerti-doctor-storage-v2',
-    'ilerti-consultations-vault'
-  ];
-  legacyKeys.forEach((key) => {
-    try {
-      localStorage.removeItem(key);
-    } catch {}
+  const allKeys = Object.keys(localStorage);
+  allKeys.forEach((key) => {
+    if (key.startsWith('ilerti-') && !key.includes('-v5-')) {
+      try {
+        localStorage.removeItem(key);
+      } catch {}
+    }
   });
 }
 
@@ -88,11 +82,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // 2. Try Backend API login
-        let apiSuccess = false;
         try {
           const data = await api.auth.login({ email: inputKey, password: inputPass });
           if (data && data.user) {
-            apiSuccess = true;
             const isDoctor = (data.user.role || '').toUpperCase() === 'DOCTOR' || Boolean(data.user.doctor);
             const userRole: User['role'] = isDoctor ? 'doctor' : (data.user.role?.toLowerCase() as any) || 'patient';
             
@@ -114,10 +106,7 @@ export const useAuthStore = create<AuthState>()(
             return userObj;
           }
         } catch (apiErr: any) {
-          // If the backend actively reported invalid credentials or user not found, surface it if not in client store
-          if (apiErr?.response?.status === 401 || apiErr?.message?.includes('Invalid')) {
-            // Keep checking client store before throwing
-          }
+          // Continue to client store lookup
         }
 
         // 3. Client Database Verification (useAdminManagementStore & useDoctorStore)
@@ -134,9 +123,9 @@ export const useAuthStore = create<AuthState>()(
           (d) => (d.mdcnFolio && d.mdcnFolio.toLowerCase() === inputKey) || d.fullName.toLowerCase() === inputKey
         );
 
-        // If user is NOT found in any database, reject strictly!
+        // If user is NOT found in the database, reject strictly with clear message!
         if (!matchedUser && !matchedDoctor) {
-          throw new Error('This account does not exist in the database. Please create an account to get started.');
+          throw new Error('This account does not exist in the database. Please create an account to sign in.');
         }
 
         if (matchedUser) {
@@ -192,7 +181,7 @@ export const useAuthStore = create<AuthState>()(
           return doctorUser;
         }
 
-        throw new Error('This account does not exist in the database. Please create an account to get started.');
+        throw new Error('This account does not exist in the database. Please create an account to sign in.');
       },
 
       register: async (userData) => {
@@ -298,7 +287,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'ilerti-auth-v4', // Clean storage key for production
+      name: 'ilerti-v5-auth',
       storage: createJSONStorage(() => localStorage),
     }
   )
