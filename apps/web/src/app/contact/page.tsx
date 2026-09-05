@@ -68,12 +68,12 @@ export default function ContactPage() {
 
               <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <MapPin className="w-5 h-5" />
+                  <Clock className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-navy-900">Headquarters</h3>
+                <h3 className="font-bold text-navy-900">Online Helpdesk</h3>
+                <p className="text-xs text-navy-500">24/7 Digital Care & Triage Assistance</p>
                 <p className="text-xs text-navy-600 leading-relaxed">
-                  Victoria Island, Lagos State, Nigeria <br />
-                  Central Business District, Abuja FCT
+                  Available nationwide across all 36 Nigerian states & FCT.
                 </p>
               </div>
             </div>
