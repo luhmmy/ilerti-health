@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverDb, ServerUser, ServerDoctor } from '@/lib/serverDb';
+import { dispatchOtp } from '@/lib/dispatchOtp';
 
 export async function POST(req: Request) {
   try {
@@ -96,6 +97,9 @@ export async function POST(req: Request) {
       phone: data.phone,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
+
+    // Dispatch real SMS (Termii) and real Email (Resend)
+    await dispatchOtp(email, data.phone, otp);
 
     const token = serverDb.signToken({
       userId: newUser.id,
