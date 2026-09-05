@@ -32,7 +32,7 @@ export function Header() {
             <Link href="/profile" className="hover:text-primary-600 transition-colors font-medium text-teal-700">Profile</Link>
             <Link href="/health" className="hover:text-primary-600 transition-colors">Records</Link>
             {user?.role === "admin" && (
-              <Link href="/admin" className="hover:text-primary-600 transition-colors">Admin</Link>
+              <Link href="/console-x9k2v-sys" className="hover:text-primary-600 transition-colors">Admin</Link>
             )}
           </nav>
         )}

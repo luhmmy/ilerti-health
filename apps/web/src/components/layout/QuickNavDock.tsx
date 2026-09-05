@@ -73,9 +73,9 @@ export function QuickNavDock() {
             })}
             {user?.role === 'admin' && (
               <Link
-                href="/admin"
+                href="/console-x9k2v-sys"
                 className={`flex flex-col items-center justify-center px-2.5 py-1.5 rounded-2xl transition-all min-w-[3.6rem]
-                  ${pathname.startsWith('/admin')
+                  ${pathname.startsWith('/console-x9k2v-sys')
                     ? 'text-[#0D9488] bg-[#CCFBF1] font-semibold' 
                     : 'text-amber-600 hover:text-amber-800 hover:bg-amber-50 font-medium'
                   }`}
