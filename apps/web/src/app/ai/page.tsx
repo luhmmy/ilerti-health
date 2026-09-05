@@ -187,7 +187,7 @@ export default function AIPage() {
               <h1 className="text-xl md:text-2xl font-bold text-navy-900 flex items-center gap-2">
                 ILERTI AI Health Navigator
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Powered by GPT-4
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Live Clinical AI
                 </span>
               </h1>
               <p className="text-xs md:text-sm text-navy-500">

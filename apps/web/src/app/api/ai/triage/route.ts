@@ -11,24 +11,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Symptoms or message are required' }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
 
-    if (!apiKey) {
-      return fallbackTriage(userInput, 'No OpenAI API Key configured in environment.');
-    }
-
-    // Build conversation for GPT-4
     const systemPrompt = `You are the lead clinical triage intelligence assistant for ILERTI Health — Nigeria's digital healthcare ecosystem.
-You are powered by GPT-4.
 Your purpose:
 1. Carefully assess the user's symptoms with empathetic, professional clinical reasoning suited for Nigeria (accounting for common conditions like malaria, typhoid, hypertension, sickle cell, pregnancy, pediatric conditions, gastroenteritis, etc.).
 2. You DO NOT provide final definitive medical diagnosis or write prescriptions. You guide, triage urgency, and recommend the best healthcare action and specialist.
 3. You MUST respond ONLY with a valid JSON object matching this schema (do NOT wrap in markdown \`\`\`json, just pure raw JSON):
 
 {
-  "model": "GPT-4o (Clinical Triage Engine)",
+  "model": "string (name of model)",
   "urgency": "LOW" | "MEDIUM" | "HIGH" | "EMERGENCY",
-  "specialistRecommended": "string (e.g. General Practice, Cardiology, Paediatrics, Obstetrics & Gynaecology, Internal Medicine, Dermatology, Neurology)",
+  "specialistRecommended": "string (e.g. General Practice, Cardiology, Paediatrics, Obstetrics & Gynaecology, Internal Medicine, Dermatology, Gastroenterology)",
   "advice": "string (warm, comprehensive, and actionable clinical advice with clear guidance)",
   "warningSigns": ["string", "string", "string"],
   "followUp": "string (a helpful follow-up question to better understand the user's condition)"
@@ -55,44 +51,109 @@ Urgency Grading:
       chatMessages.push({ role: 'user', content: userInput });
     }
 
-    // Call OpenAI GPT-4o (flagship model)
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: chatMessages,
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-      }),
-    });
+    // 1. Try Groq Free API (LLaMA 3.3 70B) if configured
+    if (groqKey) {
+      try {
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${groqKey}`,
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: chatMessages,
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+          }),
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI GPT-4 API Error:', response.status, errorText);
-      
-      let errorReason = 'OpenAI API request failed';
-      if (response.status === 429) {
-        errorReason = 'OpenAI API Quota/Credits exhausted. Please top up credits on platform.openai.com.';
+        if (groqRes.ok) {
+          const data = await groqRes.json();
+          const resultText = data.choices?.[0]?.message?.content?.trim();
+          const parsed = JSON.parse(resultText);
+          parsed.model = 'Groq LLaMA-3.3 70B (Free Tier)';
+          return NextResponse.json(parsed);
+        }
+      } catch (err) {
+        console.error('Groq API Error:', err);
       }
-
-      return fallbackTriage(userInput, errorReason);
     }
 
-    const data = await response.json();
-    const resultText = data.choices?.[0]?.message?.content?.trim();
-    
-    try {
-      const parsed = JSON.parse(resultText);
-      parsed.model = 'GPT-4o';
-      return NextResponse.json(parsed);
-    } catch (e) {
-      console.error('Failed to parse GPT-4 JSON response:', resultText);
-      return fallbackTriage(userInput, 'JSON parse error');
+    // 2. Try Google Gemini Free API if configured
+    if (geminiKey) {
+      try {
+        const geminiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: `${systemPrompt}\n\nUser Symptoms / Query: ${userInput}`,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.2,
+              },
+            }),
+          }
+        );
+
+        if (geminiRes.ok) {
+          const data = await geminiRes.json();
+          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (rawText) {
+            const parsed = JSON.parse(rawText);
+            parsed.model = 'Google Gemini 1.5 Flash (Free Tier)';
+            return NextResponse.json(parsed);
+          }
+        }
+      } catch (err) {
+        console.error('Gemini API Error:', err);
+      }
     }
+
+    // 3. Try OpenAI GPT-4o if configured
+    if (openaiKey) {
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${openaiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: chatMessages,
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const resultText = data.choices?.[0]?.message?.content?.trim();
+          const parsed = JSON.parse(resultText);
+          parsed.model = 'GPT-4o';
+          return NextResponse.json(parsed);
+        } else {
+          const errorText = await response.text();
+          console.error('OpenAI Error (falling back to clinical engine):', response.status, errorText);
+        }
+      } catch (err) {
+        console.error('OpenAI fetch error:', err);
+      }
+    }
+
+    // 4. Default to Built-in Clinical Protocol Engine
+    return fallbackTriage(userInput);
     
   } catch (error: any) {
     console.error('Triage API Error:', error);
