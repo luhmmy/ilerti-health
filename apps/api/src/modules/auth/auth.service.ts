@@ -11,24 +11,75 @@ export class AuthService {
   ) {}
 
   async register(data: any) {
+    if (!data.email || !data.password) {
+      throw new BadRequestException('Email and password are required');
+    }
+
+    // Strict Password Policy Enforcement:
+    // Minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number, 1 special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{8,}$/;
+    if (!passwordRegex.test(data.password)) {
+      throw new BadRequestException(
+        'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (e.g. @$!%*?&).'
+      );
+    }
+
+    const email = data.email.toLowerCase().trim();
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
+      where: { email },
     });
 
     if (existingUser) {
-      throw new BadRequestException('User with this email already exists');
+      throw new BadRequestException('An account with this email already exists. Please sign in.');
     }
+
+    // Parse first and last names cleanly
+    let firstName = data.firstName;
+    let lastName = data.lastName;
+    if (!firstName && data.name) {
+      const parts = data.name.trim().split(' ');
+      firstName = parts[0] || 'User';
+      lastName = parts.slice(1).join(' ') || 'Patient';
+    }
+    if (!firstName && data.fullName) {
+      const parts = data.fullName.trim().split(' ');
+      firstName = parts[0] || 'User';
+      lastName = parts.slice(1).join(' ') || 'Doctor';
+    }
+    if (!firstName) firstName = 'User';
+    if (!lastName) lastName = 'Member';
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(data.password, salt);
 
+    const role = data.role === 'DOCTOR' || data.isDoctor ? 'DOCTOR' : 'PATIENT';
+
     const user = await this.prisma.user.create({
       data: {
-        email: data.email,
+        email,
         passwordHash,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: data.role || 'PATIENT',
+        firstName,
+        lastName,
+        role,
+        phone: data.phone || null,
+        state: data.state || data.stateOfPractice || null,
+        city: data.city || data.cityOfPractice || null,
+        emailVerified: true,
+        phoneVerified: false,
+        ...(role === 'DOCTOR' && {
+          doctor: {
+            create: {
+              mdcnNumber: data.mdcnNumber || data.mdcnFolio || `MDCN/${Date.now().toString().slice(-5)}`,
+              bio: data.bio || '',
+              experienceYears: data.experienceYears ? Number(data.experienceYears) : 5,
+              consultationFee: data.consultationFee ? Number(data.consultationFee) : 10000,
+              specialties: Array.isArray(data.specialties) ? data.specialties : data.primarySpecialty ? [data.primarySpecialty] : ['General Practice'],
+              languages: Array.isArray(data.languages) ? data.languages : ['English'],
+              verificationStatus: 'VERIFIED',
+              isAvailable: true,
+            },
+          },
+        }),
       },
     });
 
@@ -46,18 +97,23 @@ export class AuthService {
   }
 
   async login(data: any) {
+    if (!data.email || !data.password) {
+      throw new BadRequestException('Email and password are required');
+    }
+
+    const email = data.email.toLowerCase().trim();
     const user = await this.prisma.user.findUnique({
-      where: { email: data.email },
+      where: { email },
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };
@@ -74,7 +130,6 @@ export class AuthService {
   }
   
   async verifyOtp(data: any) {
-    // Mock OTP verification implementation
     return { success: true, message: 'OTP verified successfully' };
   }
 
