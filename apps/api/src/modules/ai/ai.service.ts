@@ -34,7 +34,7 @@ export class AiService {
       Ensure safe guardrails: If symptoms indicate chest pain, severe bleeding, difficulty breathing, or stroke symptoms, classify as EMERGENCY and recommend URGENT_CARE.`;
 
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [{ role: 'system', content: prompt }],
         response_format: { type: 'json_object' },
       });

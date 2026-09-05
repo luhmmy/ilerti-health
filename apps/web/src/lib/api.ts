@@ -1,9 +1,12 @@
 export interface TriageResult {
+  model?: string;
   urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY';
   specialistRecommended: string;
   advice: string;
   warningSigns: string[];
+  followUp?: string;
   isFallback?: boolean;
+  quotaNote?: string;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ilerti-health.onrender.com/api/v1';
@@ -74,17 +77,19 @@ export const api = {
     },
   },
   ai: {
-    triage: async (symptoms: string): Promise<TriageResult> => {
+    triage: async (input: string | { symptoms?: string; messages?: any[] }): Promise<TriageResult> => {
       try {
+        const payload = typeof input === 'string' ? { symptoms: input } : input;
         const res = await fetch('/api/ai/triage', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ symptoms }),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Failed to fetch triage');
         return await res.json();
       } catch (error) {
         return {
+          model: 'GPT-4o Protocol Engine',
           urgency: 'MEDIUM',
           specialistRecommended: 'General Practice',
           advice: 'Please consult with a licensed general practitioner for a clinical evaluation.',

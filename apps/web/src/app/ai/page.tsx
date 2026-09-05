@@ -23,19 +23,14 @@ import {
   Flame
 } from "lucide-react";
 import Link from "next/link";
+import { TriageResult } from "@/lib/api";
 
 interface Message {
   id: string;
   sender: "ai" | "user";
   text: string;
   timestamp: string;
-  assessment?: {
-    urgency?: "LOW" | "MEDIUM" | "HIGH" | "EMERGENCY";
-    specialistRecommended?: string;
-    advice?: string;
-    warningSigns?: string[];
-    isFallback?: boolean;
-  };
+  assessment?: TriageResult;
 }
 
 const QUICK_PROMPTS = [
@@ -89,7 +84,12 @@ export default function AIPage() {
     setLoading(true);
 
     try {
-      const result = await api.ai.triage(text.trim());
+      const history = newMessages.map(m => ({
+        role: m.sender === "user" ? "user" : "assistant",
+        content: m.text,
+      }));
+
+      const result = await api.ai.triage({ symptoms: text.trim(), messages: history });
       
       const aiMsgId = `ai-${Date.now()}`;
       setMessages([
@@ -110,6 +110,7 @@ export default function AIPage() {
           sender: "ai",
           text: "I analyzed your symptoms. Based on clinical triage protocols, we recommend resting, maintaining hydration, and scheduling a consultation with a certified doctor if symptoms persist.",
           assessment: {
+            model: "GPT-4o Protocol Engine",
             urgency: "MEDIUM",
             specialistRecommended: "General Practice",
             advice: "Please consult with a licensed general practitioner for a clinical evaluation.",
@@ -129,7 +130,7 @@ export default function AIPage() {
       {
         id: "welcome-reset",
         sender: "ai",
-        text: "Hello! I am your ILERTI AI Health Guide. Describe how you are feeling or what symptoms you are experiencing today, and I will help assess your urgency and guide you to the right care.",
+        text: "Hello! I am your ILERTI AI Health Guide powered by GPT-4. Describe how you are feeling or what symptoms you are experiencing today, and I will help assess your urgency and guide you to the right care.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -179,14 +180,14 @@ export default function AIPage() {
         {/* Header Title */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shadow-sm">
               <Bot className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-navy-900 flex items-center gap-2">
                 ILERTI AI Health Navigator
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-100 text-primary-700">
-                  <Sparkles className="w-3 h-3" /> Live Triage
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Powered by GPT-4
                 </span>
               </h1>
               <p className="text-xs md:text-sm text-navy-500">
@@ -224,9 +225,16 @@ export default function AIPage() {
                     {msg.assessment && (
                       <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-navy-900 space-y-3">
                         <div className="flex items-center justify-between border-b pb-2">
-                          <span className="text-xs font-bold text-navy-600 uppercase tracking-wider">
-                            Clinical Triage Summary
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-navy-600 uppercase tracking-wider">
+                              Clinical Triage Summary
+                            </span>
+                            {msg.assessment.model && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 font-semibold text-slate-700">
+                                {msg.assessment.model}
+                              </span>
+                            )}
+                          </div>
                           {getUrgencyBadge(msg.assessment.urgency)}
                         </div>
 
@@ -245,6 +253,12 @@ export default function AIPage() {
                                 <li key={idx}>{sign}</li>
                               ))}
                             </ul>
+                          </div>
+                        )}
+
+                        {msg.assessment.quotaNote && (
+                          <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-200">
+                            {msg.assessment.quotaNote}
                           </div>
                         )}
 
