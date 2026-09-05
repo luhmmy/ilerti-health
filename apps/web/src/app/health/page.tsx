@@ -4,11 +4,16 @@ import Link from "next/link";
 import { Shield, Clock, Pill, Bell, FileText, Activity } from "lucide-react";
 import { Header } from "../../components/layout/Header";
 import { Footer } from "../../components/layout/Footer";
+import { AuthGuard } from "../../components/auth/AuthGuard";
 
 export default function HealthPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
+    <AuthGuard
+      serviceName="Personal Health Records Vault"
+      serviceDescription="To view encrypted laboratory results, active prescriptions, and medical files in accordance with NDPR data protection regulations, please sign in or register."
+    >
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
@@ -64,7 +69,8 @@ export default function HealthPage() {
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </AuthGuard>
   );
 }

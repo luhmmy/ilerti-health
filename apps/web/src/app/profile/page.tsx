@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 const GENOTYPES = ['AA', 'AS', 'SS', 'AC'];
@@ -124,8 +125,12 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
-      <Header />
+    <AuthGuard 
+      serviceName="Profile & Health Vitals"
+      serviceDescription="To update your personal contact details, medical blood group, genotype, allergies, and emergency contacts, please sign in or register."
+    >
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <Header />
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4 max-w-4xl">
           
@@ -528,6 +533,7 @@ export default function ProfilePage() {
         </div>
       </main>
       <Footer />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

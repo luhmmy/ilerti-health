@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { 
   Bot, 
   User, 
@@ -152,8 +153,12 @@ export default function AIPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
+    <AuthGuard 
+      serviceName="AI Health Triage"
+      serviceDescription="To ensure medical privacy, evaluate your clinical symptoms, and save your triage results, please create a free ILERTI account or sign in."
+    >
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
 
       {/* Safety Notice Banner */}
       <div className="bg-navy-900 text-white text-xs md:text-sm py-2 px-4 border-b border-navy-800">
@@ -370,5 +375,6 @@ export default function AIPage() {
 
       <Footer />
     </div>
-  );
+  </AuthGuard>
+);
 }

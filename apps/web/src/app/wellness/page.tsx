@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useHydrationStore } from "@/stores/useHydrationStore";
 import { HydrationScannerModal } from "@/components/wellness/HydrationScannerModal";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function WellnessPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -32,8 +33,12 @@ export default function WellnessPage() {
   const goalLitres = (dailyGoalMl / 1000).toFixed(1);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
+    <AuthGuard
+      serviceName="Daily Wellness & Hydration Tracker"
+      serviceDescription="To log daily water intake, track personalized Nigerian nutrition, and maintain streaks, please create an account or sign in."
+    >
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 md:py-12">
         {/* Page Header */}
@@ -257,7 +262,8 @@ export default function WellnessPage() {
       />
 
       <Footer />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
 

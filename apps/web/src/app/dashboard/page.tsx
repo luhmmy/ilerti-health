@@ -16,6 +16,7 @@ import { EditVitalsModal } from "@/components/profile/EditVitalsModal";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
@@ -59,7 +60,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
+    <AuthGuard 
+      serviceName="Personal Health Dashboard"
+      serviceDescription="To protect your personal vitals, emergency contacts, hydration records, and consultations, please sign in or create an account."
+    >
+      <div className="min-h-screen bg-stone-50 flex flex-col">
       <Header />
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -418,10 +423,11 @@ export default function DashboardPage() {
         onClose={() => setScannerOpen(false)}
       />
 
-      <EditVitalsModal
-        isOpen={vitalsModalOpen}
-        onClose={() => setVitalsModalOpen(false)}
-      />
-    </div>
+        <EditVitalsModal
+          isOpen={vitalsModalOpen}
+          onClose={() => setVitalsModalOpen(false)}
+        />
+      </div>
+    </AuthGuard>
   );
 }

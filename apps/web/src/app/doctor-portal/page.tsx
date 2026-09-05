@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { 
   Stethoscope, 
@@ -132,8 +133,12 @@ export default function DoctorPortalPage() {
   const isVerified = user?.verificationStatus === "VERIFIED" || true;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
+    <AuthGuard 
+      serviceName="MDCN Doctor Clinical Portal"
+      serviceDescription="This area is reserved for verified medical doctors and healthcare professionals. Please sign in or register with your MDCN folio."
+    >
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
 
       {/* Top Doctor Banner */}
       <div className="bg-[#1E3A5F] text-white border-b border-navy-800">
@@ -532,7 +537,8 @@ export default function DoctorPortalPage() {
         )}
       </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </AuthGuard>
   );
 }
