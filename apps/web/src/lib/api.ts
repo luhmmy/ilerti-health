@@ -9,7 +9,7 @@ export interface TriageResult {
   quotaNote?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ilerti-health.onrender.com/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
