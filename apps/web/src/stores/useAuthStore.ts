@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { api } from '../lib/api';
 import { useAdminManagementStore } from './useAdminManagementStore';
 import { useDoctorStore } from './useDoctorStore';
+import { useProfileStore } from './useProfileStore';
 
 export interface User {
   id: string;
@@ -119,7 +120,7 @@ export const useAuthStore = create<AuthState>()(
 
         let serverResponse: any = null;
 
-        // 1. Persist to Server Database API
+        // 1. Persist strictly to Server Database API
         try {
           serverResponse = await api.auth.register({
             ...userData,
@@ -131,14 +132,22 @@ export const useAuthStore = create<AuthState>()(
           if (errMsg.includes('already exists')) {
             throw new Error('An account with this email already exists. Please sign in instead.');
           }
+          throw new Error(errMsg || 'Failed to create account on database.');
         }
 
-        const userId = serverResponse?.user?.id || (isDoc ? `dr-${Date.now()}` : `pat-${Date.now()}`);
-        const verificationOtp = serverResponse?.verificationCode || Math.floor(100000 + Math.random() * 900000).toString();
+        if (!serverResponse?.user?.id) {
+          throw new Error('Registration failed on server database. Please try again.');
+        }
+
+        // Reset local profile so old vitals/blood group do not bleed into the new account
+        useProfileStore.getState().resetProfile();
+
+        const userId = serverResponse.user.id;
+        const verificationOtp = serverResponse.verificationCode || Math.floor(100000 + Math.random() * 900000).toString();
 
         const newUser: User = {
           id: userId,
-          name: serverResponse?.user?.name || fullName,
+          name: serverResponse.user.name || fullName,
           email: email,
           phone: userData.phone,
           role: isDoc ? 'doctor' : 'patient',
@@ -154,40 +163,9 @@ export const useAuthStore = create<AuthState>()(
           isAvailable: true,
         };
 
-        // Real-time synchronization to Admin Directory with password
-        useAdminManagementStore.getState().addUser({
-          id: newUser.id,
-          fullName: newUser.name,
-          email: newUser.email || '',
-          phone: newUser.phone || '',
-          password: userData.password,
-          role: newUser.role,
-          status: 'active',
-          registeredAt: new Date().toISOString().split('T')[0],
-          location: `${userData.cityOfPractice || 'Lagos'}, Nigeria`,
-          mdcnFolio: newUser.mdcnFolio,
-          specialty: newUser.specialty,
-          consultationsCount: 0,
-        });
-
-        // If Doctor, sync to Doctor directory
-        if (isDoc) {
-          useDoctorStore.getState().registerDoctor({
-            fullName: newUser.name,
-            mdcnFolio: newUser.mdcnFolio || 'MDCN/2026/00000',
-            primarySpecialty: newUser.specialty || 'General Practice',
-            hospitalAffiliation: newUser.hospitalAffiliation || 'Private Practice',
-            stateOfPractice: userData.stateOfPractice || 'Lagos',
-            cityOfPractice: userData.cityOfPractice || 'Lagos',
-            consultationFee: userData.consultationFee || 10000,
-            languages: userData.languages || ['English'],
-            bio: userData.bio || 'Registered medical practitioner on ILERTI Health.',
-          });
-        }
-
         set({
           user: newUser,
-          token: serverResponse?.access_token || `token-${Date.now()}`,
+          token: serverResponse.access_token || `token-${Date.now()}`,
           isAuthenticated: false, // Must verify OTP
           tempOtp: verificationOtp,
           pendingEmailOrPhone: email || userData.phone,
@@ -210,6 +188,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        useProfileStore.getState().resetProfile();
         set({ user: null, token: null, isAuthenticated: false, tempOtp: null, pendingEmailOrPhone: null });
       },
 
@@ -220,6 +199,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       wipeAllAuthData: () => {
+        useProfileStore.getState().resetProfile();
         set({ user: null, token: null, isAuthenticated: false, tempOtp: null, pendingEmailOrPhone: null });
       },
     }),

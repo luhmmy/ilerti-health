@@ -40,7 +40,7 @@ export const useProfileStore = create<HealthProfileState>()(
         }),
     }),
     {
-      name: 'ilerti_user_health_profile',
+      name: 'ilerti-v6-profile',
     }
   )
 );
