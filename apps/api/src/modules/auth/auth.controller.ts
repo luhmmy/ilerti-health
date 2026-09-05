@@ -22,6 +22,11 @@ export class AuthController {
     return this.authService.verifyOtp(body);
   }
 
+  @Post('resend-otp')
+  resendOtp(@Body() body: any) {
+    return this.authService.resendOtp(body);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@CurrentUser() user: any) {

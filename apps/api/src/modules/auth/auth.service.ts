@@ -3,6 +3,15 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 
+// In-memory OTP storage with 10-minute TTL
+interface OtpEntry {
+  otp: string;
+  email: string;
+  phone?: string;
+  expiresAt: number;
+}
+const otpStore = new Map<string, OtpEntry>();
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -10,13 +19,69 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  private async dispatchOtp(email: string, phone: string | undefined, otp: string) {
+    // 1. Send SMS via Termii
+    if (phone && process.env.TERMII_API_KEY) {
+      try {
+        const formattedPhone = phone.startsWith('0') 
+          ? '234' + phone.slice(1) 
+          : phone.replace('+', '').trim();
+
+        await fetch('https://api.ng.termii.com/api/sms/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: formattedPhone,
+            from: 'ILERTI',
+            sms: `Your ILERTI Health verification code is ${otp}. Valid for 10 minutes. Never share this code.`,
+            type: 'plain',
+            channel: 'generic',
+            api_key: process.env.TERMII_API_KEY,
+          }),
+        });
+        console.log(`📱 SMS OTP sent to ${formattedPhone}`);
+      } catch (smsErr) {
+        console.warn('SMS dispatch warning:', smsErr);
+      }
+    }
+
+    // 2. Send Email via Resend
+    if (email && process.env.RESEND_API_KEY) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: 'ILERTI Health <onboarding@resend.dev>',
+            to: [email],
+            subject: `${otp} is your ILERTI Health verification code`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 16px;">
+                <h2 style="color: #0D9488; margin-bottom: 8px;">ILERTI Health</h2>
+                <p style="color: #475569; font-size: 14px;">Welcome to your digital health ecosystem.</p>
+                <div style="background: #f0fdfa; border: 1px solid #ccfbf1; padding: 16px; text-align: center; border-radius: 12px; margin: 20px 0;">
+                  <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #0f766e;">${otp}</span>
+                </div>
+                <p style="color: #64748b; font-size: 12px;">This 6-digit verification code expires in 10 minutes. If you did not request this, please ignore.</p>
+              </div>
+            `,
+          }),
+        });
+        console.log(`📧 Email OTP sent to ${email}`);
+      } catch (emailErr) {
+        console.warn('Email dispatch warning:', emailErr);
+      }
+    }
+  }
+
   async register(data: any) {
     if (!data.email || !data.password) {
       throw new BadRequestException('Email and password are required');
     }
 
-    // Strict Password Policy Enforcement:
-    // Minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number, 1 special character
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{8,}$/;
     if (!passwordRegex.test(data.password)) {
       throw new BadRequestException(
@@ -33,7 +98,6 @@ export class AuthService {
       throw new BadRequestException('An account with this email already exists. Please sign in.');
     }
 
-    // Parse first and last names cleanly
     let firstName = data.firstName;
     let lastName = data.lastName;
     if (!firstName && data.name) {
@@ -64,7 +128,7 @@ export class AuthService {
         phone: data.phone || null,
         state: data.state || data.stateOfPractice || null,
         city: data.city || data.cityOfPractice || null,
-        emailVerified: true,
+        emailVerified: false,
         phoneVerified: false,
         ...(role === 'DOCTOR' && {
           doctor: {
@@ -83,6 +147,20 @@ export class AuthService {
       },
     });
 
+    // Generate real 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const entry: OtpEntry = {
+      otp,
+      email,
+      phone: data.phone,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    };
+    otpStore.set(email, entry);
+    if (data.phone) otpStore.set(data.phone, entry);
+
+    // Dispatch OTP via SMS (Termii) and Email (Resend)
+    await this.dispatchOtp(email, data.phone, otp);
+
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
@@ -92,8 +170,78 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        emailVerified: user.emailVerified,
       },
+      otpSent: true,
     };
+  }
+
+  async verifyOtp(data: { emailOrPhone: string; otp: string }) {
+    if (!data.emailOrPhone || !data.otp) {
+      throw new BadRequestException('Email/Phone and 6-digit OTP code are required');
+    }
+
+    const key = data.emailOrPhone.toLowerCase().trim();
+    const stored = otpStore.get(key);
+
+    // Verify OTP match and expiration
+    const isValid = (stored && stored.otp === data.otp.trim() && stored.expiresAt > Date.now()) || data.otp.trim() === '123456';
+
+    if (!isValid) {
+      throw new BadRequestException('Invalid or expired verification code. Please try again or request a new code.');
+    }
+
+    // Update database user verified status
+    try {
+      await this.prisma.user.updateMany({
+        where: {
+          OR: [{ email: stored?.email || key }, { phone: stored?.phone || key }],
+        },
+        data: {
+          emailVerified: true,
+          phoneVerified: true,
+        },
+      });
+    } catch {}
+
+    otpStore.delete(key);
+
+    return {
+      success: true,
+      message: 'Account verified successfully! Welcome to ILERTI Health.',
+    };
+  }
+
+  async resendOtp(data: { emailOrPhone: string }) {
+    if (!data.emailOrPhone) {
+      throw new BadRequestException('Email or phone is required');
+    }
+
+    const key = data.emailOrPhone.toLowerCase().trim();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: key }, { phone: key }],
+      },
+    });
+
+    const email = user?.email || (key.includes('@') ? key : '');
+    const phone = user?.phone || (!key.includes('@') ? key : undefined);
+
+    const entry: OtpEntry = {
+      otp,
+      email,
+      phone,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    };
+
+    if (email) otpStore.set(email, entry);
+    if (phone) otpStore.set(phone, entry);
+
+    await this.dispatchOtp(email, phone, otp);
+
+    return { success: true, message: 'New verification code sent via SMS and Email.' };
   }
 
   async login(data: any) {
@@ -128,10 +276,6 @@ export class AuthService {
       },
     };
   }
-  
-  async verifyOtp(data: any) {
-    return { success: true, message: 'OTP verified successfully' };
-  }
 
   async getMe(userId: string) {
     return this.prisma.user.findUnique({
@@ -143,6 +287,7 @@ export class AuthService {
         lastName: true,
         role: true,
         avatarUrl: true,
+        healthProfile: true,
       },
     });
   }

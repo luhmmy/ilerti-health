@@ -3,14 +3,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { ShieldCheck, ArrowLeft } from 'lucide-react';
 
 export default function VerifyPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(59);
   const [isVerifying, setIsVerifying] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const destination = user?.email || 'your email and phone';
 
   useEffect(() => {
     if (countdown > 0) {
@@ -33,7 +39,7 @@ export default function VerifyPage() {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit if all filled
+    // Auto-submit if all 6 filled
     if (newOtp.every(v => v !== '') && !isVerifying) {
       handleVerify(newOtp.join(''));
     }
@@ -49,31 +55,48 @@ export default function VerifyPage() {
     if (code.length !== 6) return;
     
     setIsVerifying(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsVerifying(false);
-      toast.success('Account verified successfully!');
+    try {
+      await api.auth.verifyOtp({
+        emailOrPhone: user?.email || '',
+        otp: code,
+      });
+      toast.success('Account verified successfully! Welcome to ILERTI Health.');
       router.push('/dashboard');
-    }, 1500);
+    } catch (err: any) {
+      toast.error(err?.message || 'Invalid verification code. Please check and try again.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (countdown > 0) return;
-    setCountdown(59);
-    toast.success('Verification code resent');
+    try {
+      await api.auth.resendOtp({
+        emailOrPhone: user?.email || '',
+      });
+      setCountdown(59);
+      toast.success('A new 6-digit verification code was sent via SMS and Email.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Could not resend code. Please try again.');
+    }
   };
 
   return (
-    <div className="w-full text-center sm:text-left">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900">Verify your account</h2>
-        <p className="text-slate-500 mt-2">
-          We sent a 6-digit code to <span className="font-medium text-slate-800">j***@example.com</span>
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-3xl shadow-sm border border-slate-200 text-center sm:text-left">
+      <div className="mb-6">
+        <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600 mb-4 mx-auto sm:mx-0">
+          <ShieldCheck className="w-6 h-6" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 font-heading">Verify Your Account</h2>
+        <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
+          We dispatched a 6-digit verification code via SMS and Email to{' '}
+          <span className="font-semibold text-slate-800">{destination}</span>.
         </p>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex justify-center sm:justify-start gap-2 sm:gap-4">
+      <div className="space-y-6">
+        <div className="flex justify-center gap-2 sm:gap-3">
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -86,7 +109,7 @@ export default function VerifyPage() {
               value={digit}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold text-slate-900 border-2 border-slate-200 rounded-xl focus:border-teal-500 focus:ring-0 focus:outline-none transition-colors"
+              className="w-11 h-14 sm:w-12 sm:h-16 text-center text-2xl font-bold text-slate-900 border-2 border-slate-200 rounded-2xl focus:border-teal-500 focus:ring-0 focus:outline-none transition-colors"
             />
           ))}
         </div>
@@ -94,32 +117,32 @@ export default function VerifyPage() {
         <button
           onClick={() => handleVerify()}
           disabled={isVerifying || otp.some(d => d === '')}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-4 px-4 rounded-xl shadow-md text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isVerifying ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              Verifying...
+              Verifying Code...
             </div>
           ) : (
-            'Verify'
+            'Confirm & Continue'
           )}
         </button>
 
-        <div className="flex flex-col items-center sm:items-start gap-4">
-          <p className="text-sm text-slate-600">
+        <div className="flex flex-col items-center sm:items-start gap-3 pt-2">
+          <p className="text-xs text-slate-600">
             Didn't receive the code?{' '}
             <button
               onClick={handleResend}
               disabled={countdown > 0}
-              className={`font-medium ${countdown > 0 ? 'text-slate-400' : 'text-teal-600 hover:text-teal-500'}`}
+              className={`font-bold ${countdown > 0 ? 'text-slate-400' : 'text-teal-600 hover:underline'}`}
             >
-              {countdown > 0 ? `Resend in ${countdown}s` : 'Resend'}
+              {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Now'}
             </button>
           </p>
           
-          <Link href="/signup" className="text-sm font-medium text-slate-500 hover:text-slate-700">
-            Change email/phone
+          <Link href="/signup" className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign Up
           </Link>
         </div>
       </div>

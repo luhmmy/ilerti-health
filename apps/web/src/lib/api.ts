@@ -57,6 +57,12 @@ export const api = {
         body: JSON.stringify(data),
       });
     },
+    resendOtp: async (data: { emailOrPhone: string }) => {
+      return await fetchJson('/auth/resend-otp', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
     me: async () => {
       return await fetchJson('/auth/me');
     },

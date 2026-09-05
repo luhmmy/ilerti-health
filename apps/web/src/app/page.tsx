@@ -211,8 +211,8 @@ export default function Home() {
             <p className="text-navy-200 text-lg md:text-xl max-w-2xl mx-auto mb-10">
               Join thousands of Nigerians on their health journey. Get access to verified doctors, seamless care, and personalized wellness.
             </p>
-            <Button size="xl" className="bg-primary-600 hover:bg-primary-500 text-white border-none text-lg px-8">
-              Create Your Free Account
+            <Button size="xl" asChild className="bg-primary-600 hover:bg-primary-500 text-white border-none text-lg px-8 shadow-xl cursor-pointer">
+              <Link href="/signup">Create Your Free Account</Link>
             </Button>
           </ScrollReveal>
         </div>
