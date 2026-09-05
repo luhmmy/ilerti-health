@@ -33,20 +33,20 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold text-navy-900 mb-4">Company</h4>
             <ul className="space-y-3 text-sm text-navy-600">
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">About Us</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Careers</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Contact</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Press</Link></li>
+              <li><Link href="/about" className="hover:text-primary-600 transition-colors">About Us</Link></li>
+              <li><Link href="/about" className="hover:text-primary-600 transition-colors">Our Mission</Link></li>
+              <li><Link href="/community" className="hover:text-primary-600 transition-colors">Community Outreach</Link></li>
+              <li><a href="mailto:support@ilertihealth.site" className="hover:text-primary-600 transition-colors">Contact Support</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-navy-900 mb-4">Support & Legal</h4>
+            <h4 className="font-heading font-semibold text-navy-900 mb-4">Support & Trust</h4>
             <ul className="space-y-3 text-sm text-navy-600">
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Help Centre</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-primary-600 transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/about" className="hover:text-primary-600 transition-colors">Clinical Standards</Link></li>
+              <li><Link href="/prevention" className="hover:text-primary-600 transition-colors">Preventive Hub</Link></li>
+              <li><Link href="/about" className="hover:text-primary-600 transition-colors">NDPR Data Privacy</Link></li>
+              <li><a href="mailto:help@ilertihealth.site" className="hover:text-primary-600 transition-colors">Help Centre</a></li>
             </ul>
           </div>
         </div>
