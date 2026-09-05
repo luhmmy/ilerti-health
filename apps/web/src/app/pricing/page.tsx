@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import { Header } from "../../components/layout/Header";
 import { Footer } from "../../components/layout/Footer";
+import { AuthGuard } from "../../components/auth/AuthGuard";
 import Link from "next/link";
 import { useAuthStore } from "../../stores/useAuthStore";
 
@@ -10,8 +11,12 @@ export default function PricingPage() {
   const { isAuthenticated } = useAuthStore();
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
+    <AuthGuard 
+      serviceName="Membership & Subscription Plans"
+      serviceDescription="To view membership tiers, activate your ILERTI Plus quarterly consultations, or enroll in corporate plans, please sign in or register."
+    >
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-16">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 bg-[#CCFBF1] text-[#0D9488] px-3.5 py-1.5 rounded-full text-xs font-semibold mb-4">
@@ -99,6 +104,7 @@ export default function PricingPage() {
         </div>
       </main>
       <Footer />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

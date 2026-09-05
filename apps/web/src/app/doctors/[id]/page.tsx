@@ -3,6 +3,7 @@
 import { useDoctorStore } from '@/stores/useDoctorStore';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +30,12 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header />
+    <AuthGuard
+      serviceName="Doctor Consultation Booking"
+      serviceDescription="To view physician credentials, select clinical time slots, and book a secure telehealth appointment, please sign in or register."
+    >
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <Header />
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -127,6 +132,7 @@ export default function DoctorProfilePage({ params }: { params: Promise<{ id: st
         </div>
       </main>
       <Footer />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

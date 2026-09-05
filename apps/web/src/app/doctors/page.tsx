@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/badge';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { CheckCircle, Clock, Search, MapPin, Stethoscope, Star } from 'lucide-react';
 
 export default function DoctorsPage() {
@@ -42,8 +43,12 @@ export default function DoctorsPage() {
   const specialtiesList = ['ALL', 'Cardiology', 'Paediatrics', 'Obstetrics & Gynaecology', 'General Practice', 'Family Medicine', 'Internal Medicine', 'Endocrinology', 'Dermatology'];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
-      <Header />
+    <AuthGuard 
+      serviceName="Verified Doctor Network"
+      serviceDescription="To protect clinical appointments, check live practitioner schedules, and book video/audio consultations, please sign in or register."
+    >
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <Header />
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Hero Header */}
@@ -171,6 +176,7 @@ export default function DoctorsPage() {
         </div>
       </main>
       <Footer />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

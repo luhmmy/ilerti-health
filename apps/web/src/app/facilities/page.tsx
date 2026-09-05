@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/badge';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { Building2, MapPin, Phone, Globe, ShieldCheck, Search, Activity } from 'lucide-react';
 
 export default function FacilitiesPage() {
@@ -42,8 +43,12 @@ export default function FacilitiesPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
-      <Header />
+    <AuthGuard 
+      serviceName="Healthcare Facilities & Diagnostic Labs Directory"
+      serviceDescription="To access verified Nigerian hospital directories, diagnostic imaging centres, and contact desk numbers, please sign in or register."
+    >
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <Header />
       <main className="flex-1 py-12">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
@@ -180,6 +185,7 @@ export default function FacilitiesPage() {
         </div>
       </main>
       <Footer />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
