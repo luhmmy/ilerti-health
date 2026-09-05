@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
-import { QuickNavDock } from '../components/layout/QuickNavDock';
 import { SessionTimeoutWatcher } from '../components/auth/SessionTimeoutWatcher';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -27,7 +26,6 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${plusJakarta.variable}`}>
       <body className="font-sans antialiased min-h-screen flex flex-col">
         {children}
-        <QuickNavDock />
         <SessionTimeoutWatcher />
         <Toaster position="top-right" />
       </body>
