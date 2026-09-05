@@ -19,13 +19,6 @@ export function Header() {
     <header className="flex h-16 items-center justify-between px-6 border-b bg-white">
       <div className="flex items-center gap-6">
         <BrandLogo size="md" />
-        <Link 
-          href="/hub" 
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary-50 text-primary-700 rounded-full border border-primary-200 hover:bg-primary-100 transition-colors"
-        >
-          <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
-          Ecosystem Hub
-        </Link>
         <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-navy-700">
           <Link href="/ai" className="hover:text-primary-600 transition-colors flex items-center gap-1 font-semibold text-primary-700">
             <span className="text-base">✨</span> AI Triage

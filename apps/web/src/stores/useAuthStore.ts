@@ -22,9 +22,9 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: { id: 'demo1', name: 'Adebayo', role: 'patient' },
-      token: 'demo-token',
-      isAuthenticated: true,
+      user: null,
+      token: null,
+      isAuthenticated: false,
 
       login: async (credentials) => {
         const data = await api.auth.login(credentials);
