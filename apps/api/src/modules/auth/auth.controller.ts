@@ -32,4 +32,10 @@ export class AuthController {
   getMe(@CurrentUser() user: any) {
     return this.authService.getMe(user.userId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('profile')
+  updateProfile(@CurrentUser() user: any, @Body() body: any) {
+    return this.authService.updateProfile(user.userId, body);
+  }
 }

@@ -30,6 +30,7 @@ export function Header() {
           {isAuthenticated && (
             <>
               <Link href="/dashboard" className="hover:text-primary-600 transition-colors">Dashboard</Link>
+              <Link href="/profile" className="hover:text-primary-600 transition-colors font-medium text-teal-700">Profile</Link>
               <Link href="/health" className="hover:text-primary-600 transition-colors">Records</Link>
               {user?.role === "admin" && (
                 <Link href="/admin" className="hover:text-primary-600 transition-colors">Admin</Link>
@@ -41,17 +42,21 @@ export function Header() {
 
       <div className="flex items-center gap-4">
         {isAuthenticated ? (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-800 font-bold">
-                {user?.name?.[0] || "U"}
+          <div className="flex items-center gap-3">
+            <Link 
+              href="/profile" 
+              className="flex items-center gap-2 p-1.5 px-3 rounded-full hover:bg-teal-50 border border-transparent hover:border-teal-200 transition-all cursor-pointer group"
+              title="View and edit profile"
+            >
+              <div className="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-800 font-bold group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                {user?.name?.[0]?.toUpperCase() || "U"}
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">{user?.name}</span>
-                <span className="text-xs text-gray-500 capitalize">{user?.role}</span>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-semibold group-hover:text-teal-700 transition-colors">{user?.name}</span>
+                <span className="text-xs text-gray-500 capitalize">{user?.role || "Patient"} • Edit Profile</span>
               </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            </Link>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="text-xs">
               Sign Out
             </Button>
           </div>

@@ -301,4 +301,41 @@ export class AuthService {
       },
     });
   }
+
+  async updateProfile(userId: string, data: any) {
+    const updateData: any = {};
+    if (data.firstName) updateData.firstName = data.firstName.trim();
+    if (data.lastName) updateData.lastName = data.lastName.trim();
+    if (data.phone !== undefined) updateData.phone = data.phone?.trim() || null;
+    if (data.state !== undefined) updateData.state = data.state?.trim() || null;
+    if (data.city !== undefined) updateData.city = data.city?.trim() || null;
+    if (data.address !== undefined) updateData.address = data.address?.trim() || null;
+
+    if (data.name && !data.firstName && !data.lastName) {
+      const parts = data.name.trim().split(' ');
+      updateData.firstName = parts[0] || 'User';
+      updateData.lastName = parts.slice(1).join(' ') || '';
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    return {
+      success: true,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        name: `${updatedUser.firstName} ${updatedUser.lastName}`.trim(),
+        role: updatedUser.role,
+        phone: updatedUser.phone,
+        state: updatedUser.state,
+        city: updatedUser.city,
+        address: updatedUser.address,
+      },
+    };
+  }
 }

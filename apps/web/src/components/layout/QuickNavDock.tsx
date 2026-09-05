@@ -13,6 +13,7 @@ import {
   FileHeart, 
   Apple, 
   ShieldAlert,
+  User,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { label: 'Doctors', href: '/doctors', icon: Stethoscope },
   { label: 'Telehealth', href: '/consultations/checkout/dr-1', icon: Video },
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Profile', href: '/profile', icon: User },
   { label: 'Vault', href: '/health', icon: FileHeart },
   { label: 'Nutrition', href: '/wellness', icon: Apple },
   { label: 'Admin', href: '/admin', icon: ShieldAlert },

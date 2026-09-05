@@ -66,6 +66,12 @@ export const api = {
     me: async () => {
       return await fetchJson('/auth/me');
     },
+    updateProfile: async (data: any) => {
+      return await fetchJson('/auth/profile', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
   },
   ai: {
     triage: async (symptoms: string): Promise<TriageResult> => {
