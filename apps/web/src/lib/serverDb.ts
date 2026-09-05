@@ -570,6 +570,253 @@ export const serverDb = {
     await kvDel(`otp:${norm}`);
   },
 
+  async getAllUsers(): Promise<ServerUser[]> {
+    const userMap = new Map<string, ServerUser>();
+
+    // 1. In-memory users first
+    if (global.__ilerti_users) {
+      global.__ilerti_users.forEach((u) => {
+        userMap.set(u.id, u);
+      });
+    }
+
+    // 2. PostgreSQL users
+    if (pool) {
+      await ensureTables();
+      try {
+        const res = await pool.query(`SELECT * FROM ilerti_users ORDER BY created_at DESC`);
+        for (const row of res.rows) {
+          const user: ServerUser = {
+            id: row.id,
+            email: row.email,
+            phone: row.phone,
+            passwordHash: row.password_hash,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            name: row.name,
+            role: row.role,
+            avatarUrl: row.avatar_url,
+            specialty: row.specialty,
+            mdcnFolio: row.mdcn_folio,
+            hospitalAffiliation: row.hospital_affiliation,
+            stateOfPractice: row.state_of_practice,
+            cityOfPractice: row.city_of_practice,
+            consultationFee: row.consultation_fee ? Number(row.consultation_fee) : 10000,
+            verificationStatus: row.verification_status,
+            languages: Array.isArray(row.languages) ? row.languages : ['English'],
+            bio: row.bio,
+            isAvailable: row.is_available,
+            emailVerified: row.email_verified,
+            phoneVerified: row.phone_verified,
+            createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+          };
+          userMap.set(user.id, user);
+          global.__ilerti_users?.set(user.email.toLowerCase(), user);
+        }
+      } catch (err) {
+        console.warn('Postgres getAllUsers error:', err);
+      }
+    }
+
+    const result: ServerUser[] = [];
+    userMap.forEach((u) => result.push(u));
+    return result;
+  },
+
+  async updateUserStatus(id: string, status: string, reason?: string, suspendedUntil?: string): Promise<void> {
+    if (pool) {
+      await ensureTables();
+      try {
+        await pool.query(
+          `UPDATE ilerti_users SET verification_status = $2, updated_at = NOW() WHERE id = $1`,
+          [id, status]
+        );
+      } catch (err) {
+        console.warn('Postgres updateUserStatus error:', err);
+      }
+    }
+
+    if (global.__ilerti_users) {
+      global.__ilerti_users.forEach((u) => {
+        if (u.id === id) {
+          u.verificationStatus = status;
+        }
+      });
+    }
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    if (pool) {
+      await ensureTables();
+      try {
+        await pool.query(`DELETE FROM ilerti_users WHERE id = $1`, [id]);
+        await pool.query(`DELETE FROM ilerti_doctors WHERE id = $1 OR user_id = $1`, [id]);
+      } catch (err) {
+        console.warn('Postgres deleteUser error:', err);
+      }
+    }
+
+    if (global.__ilerti_users) {
+      global.__ilerti_users.delete(id);
+      const keysToDelete: string[] = [];
+      global.__ilerti_users.forEach((u, k) => {
+        if (u.id === id) {
+          keysToDelete.push(k);
+        }
+      });
+      keysToDelete.forEach((k) => global.__ilerti_users?.delete(k));
+    }
+    global.__ilerti_doctors?.delete(id);
+  },
+
+  // ---------------- DOCTOR OPERATIONS ----------------
+
+  async getAllDoctors(): Promise<ServerDoctor[]> {
+    const docMap = new Map<string, ServerDoctor>();
+
+    // Seed realistic Nigerian MDCN doctors if list is small
+    const seedDoctors: ServerDoctor[] = [
+      {
+        id: "doc-101",
+        userId: "doc-101",
+        fullName: "Dr. Funmilayo Adeleke",
+        mdcnFolio: "MDCN/2014/48902",
+        primarySpecialty: "Cardiology",
+        secondarySpecialty: "Internal Medicine",
+        hospitalAffiliation: "Lagos University Teaching Hospital (LUTH)",
+        stateOfPractice: "Lagos",
+        cityOfPractice: "Idi-Araba, Lagos",
+        consultationFee: 12000,
+        languages: ["English", "Yoruba"],
+        bio: "Senior Consultant Cardiologist specializing in preventive hypertension management and cardiovascular wellness.",
+        status: "verified",
+        isAvailable: true,
+        createdAt: "2024-01-15T10:00:00.000Z",
+      },
+      {
+        id: "doc-102",
+        userId: "doc-102",
+        fullName: "Dr. Chinedu Eze",
+        mdcnFolio: "MDCN/2016/59214",
+        primarySpecialty: "Paediatrics",
+        secondarySpecialty: "Child Wellness",
+        hospitalAffiliation: "University of Nigeria Teaching Hospital (UNTH)",
+        stateOfPractice: "Enugu",
+        cityOfPractice: "Enugu",
+        consultationFee: 10000,
+        languages: ["English", "Igbo"],
+        bio: "Passionate paediatrician with extensive clinical experience in child developmental screening, nutrition and neonatal care.",
+        status: "verified",
+        isAvailable: true,
+        createdAt: "2024-02-10T09:00:00.000Z",
+      },
+      {
+        id: "doc-103",
+        userId: "doc-103",
+        fullName: "Dr. Amina Bello",
+        mdcnFolio: "MDCN/2018/73412",
+        primarySpecialty: "Obstetrics & Gynaecology",
+        secondarySpecialty: "Maternal Health",
+        hospitalAffiliation: "National Hospital Abuja",
+        stateOfPractice: "Abuja FCT",
+        cityOfPractice: "Central Business District, Abuja",
+        consultationFee: 15000,
+        languages: ["English", "Hausa"],
+        bio: "Fellow of the West African College of Surgeons (FWACS) providing maternal wellness and prenatal telemedicine care.",
+        status: "verified",
+        isAvailable: true,
+        createdAt: "2024-03-01T11:00:00.000Z",
+      },
+      {
+        id: "doc-104",
+        userId: "doc-104",
+        fullName: "Dr. Babatunde Ojo",
+        mdcnFolio: "MDCN/2019/84019",
+        primarySpecialty: "General Practice",
+        secondarySpecialty: "Family Medicine",
+        hospitalAffiliation: "Reddington Hospital, Victoria Island",
+        stateOfPractice: "Lagos",
+        cityOfPractice: "Victoria Island, Lagos",
+        consultationFee: 8000,
+        languages: ["English", "Yoruba", "Pidgin"],
+        bio: "Primary care physician focusing on holistic lifestyle medicine, early disease detection, and chronic care management.",
+        status: "verified",
+        isAvailable: true,
+        createdAt: "2024-03-20T14:00:00.000Z",
+      },
+    ];
+
+    for (const d of seedDoctors) {
+      docMap.set(d.id, d);
+    }
+
+    // 1. In-memory registered doctors
+    if (global.__ilerti_doctors) {
+      global.__ilerti_doctors.forEach((d) => {
+        docMap.set(d.id, d);
+      });
+    }
+
+    // 2. PostgreSQL doctors
+    if (pool) {
+      await ensureTables();
+      try {
+        const res = await pool.query(`SELECT * FROM ilerti_doctors ORDER BY created_at DESC`);
+        for (const row of res.rows) {
+          const doctor: ServerDoctor = {
+            id: row.id,
+            userId: row.user_id,
+            fullName: row.full_name,
+            mdcnFolio: row.mdcn_folio,
+            primarySpecialty: row.primary_specialty,
+            secondarySpecialty: row.secondary_specialty,
+            hospitalAffiliation: row.hospital_affiliation,
+            stateOfPractice: row.state_of_practice,
+            cityOfPractice: row.city_of_practice,
+            consultationFee: row.consultation_fee ? Number(row.consultation_fee) : 10000,
+            languages: Array.isArray(row.languages) ? row.languages : ['English'],
+            bio: row.bio,
+            status: row.status,
+            isAvailable: row.is_available,
+            createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+          };
+          docMap.set(doctor.id, doctor);
+          global.__ilerti_doctors?.set(doctor.id, doctor);
+        }
+      } catch (err) {
+        console.warn('Postgres getAllDoctors error:', err);
+      }
+    }
+
+    const docResult: ServerDoctor[] = [];
+    docMap.forEach((d) => docResult.push(d));
+    return docResult;
+  },
+
+  async updateDoctorStatus(id: string, status: 'pending' | 'verified' | 'rejected'): Promise<void> {
+    if (pool) {
+      await ensureTables();
+      try {
+        await pool.query(
+          `UPDATE ilerti_doctors SET status = $2 WHERE id = $1 OR user_id = $1`,
+          [id, status]
+        );
+        await pool.query(
+          `UPDATE ilerti_users SET verification_status = $2 WHERE id = $1`,
+          [id, status.toUpperCase()]
+        );
+      } catch (err) {
+        console.warn('Postgres updateDoctorStatus error:', err);
+      }
+    }
+
+    const doc = global.__ilerti_doctors?.get(id);
+    if (doc) {
+      doc.status = status;
+      global.__ilerti_doctors?.set(id, doc);
+    }
+  },
+
   // ---------------- HARD DATABASE WIPE ----------------
 
   async wipeAll(): Promise<void> {

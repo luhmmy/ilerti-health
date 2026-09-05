@@ -162,4 +162,24 @@ export const api = {
       return await fetchJson('/wellness/my-plan');
     },
   },
+  admin: {
+    getUsers: async () => {
+      return await fetchJson('/admin/users');
+    },
+    moderateUser: async (data: { action: 'ban' | 'suspend' | 'restore' | 'delete'; userId: string; reason?: string; suspendDays?: number }) => {
+      return await fetchJson('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    getDoctors: async () => {
+      return await fetchJson('/admin/doctors');
+    },
+    verifyDoctor: async (data: { doctorId: string; action: 'verify' | 'reject' }) => {
+      return await fetchJson('/admin/doctors', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+  },
 };

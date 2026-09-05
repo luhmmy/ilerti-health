@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Users, 
   Search, 
@@ -25,6 +25,7 @@ import {
 import { useAdminManagementStore, ManagedUser } from "@/stores/useAdminManagementStore";
 import { useDoctorStore } from "@/stores/useDoctorStore";
 import { useConsultationStore } from "@/stores/useConsultationStore";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -33,6 +34,8 @@ export default function UsersManagementPage() {
   const { wipeAllDoctors } = useDoctorStore();
   const { wipeAllConsultations } = useConsultationStore();
 
+  const [liveUsers, setLiveUsers] = useState<ManagedUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -43,7 +46,42 @@ export default function UsersManagementPage() {
   const [reason, setReason] = useState("");
   const [suspendDays, setSuspendDays] = useState(14);
 
-  const filteredUsers = searchUsers(searchQuery, selectedRole, selectedStatus);
+  const fetchLiveUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await api.admin.getUsers();
+      if (res && res.users) {
+        setLiveUsers(res.users);
+        // Sync to local store
+        for (const u of res.users) {
+          useAdminManagementStore.getState().addUser(u);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch live users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveUsers();
+  }, []);
+
+  const combinedUsers = liveUsers.length > 0 ? liveUsers : users;
+
+  const filteredUsers = combinedUsers.filter((u) => {
+    const matchesSearch =
+      u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (u.phone && u.phone.includes(searchQuery)) ||
+      (u.mdcnFolio && u.mdcnFolio.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesRole = selectedRole === "all" || u.role === selectedRole;
+    const matchesStatus = selectedStatus === "all" || u.status === selectedStatus;
+
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   const handleOpenAction = (user: ManagedUser, type: "ban" | "suspend" | "delete") => {
     setSelectedUser(user);
@@ -51,18 +89,31 @@ export default function UsersManagementPage() {
     setReason("");
   };
 
-  const handleConfirmAction = (e: React.FormEvent) => {
+  const handleConfirmAction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (actionType === "wipe_all") {
+      try {
+        await api.auth.wipeDatabase();
+      } catch {}
       wipeAllUsers();
       wipeAllDoctors();
       wipeAllConsultations();
+      setLiveUsers([]);
       toast.success("Database wiped successfully. Clean production state restored.");
       setActionType(null);
       return;
     }
 
     if (!selectedUser || !actionType) return;
+
+    try {
+      await api.admin.moderateUser({
+        action: actionType,
+        userId: selectedUser.id,
+        reason,
+        suspendDays: Number(suspendDays),
+      });
+    } catch {}
 
     if (actionType === "ban") {
       banUser(selectedUser.id, reason);
@@ -75,12 +126,20 @@ export default function UsersManagementPage() {
       toast.info(`Account for ${selectedUser.fullName} removed.`);
     }
 
+    fetchLiveUsers();
     setSelectedUser(null);
     setActionType(null);
   };
 
-  const handleRestore = (user: ManagedUser) => {
+  const handleRestore = async (user: ManagedUser) => {
+    try {
+      await api.admin.moderateUser({
+        action: "restore",
+        userId: user.id,
+      });
+    } catch {}
     restoreUser(user.id);
+    fetchLiveUsers();
     toast.success(`${user.fullName}'s account has been restored to active status.`);
   };
 

@@ -1,21 +1,48 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, UserCheck, Stethoscope, Banknote, BarChart3, ShieldAlert, ArrowRight, ShieldCheck, Activity, Lock, AlertTriangle, Video, Sparkles } from "lucide-react";
 import { useAdminManagementStore } from "@/stores/useAdminManagementStore";
 import { useDoctorStore } from "@/stores/useDoctorStore";
 import { useConsultationStore } from "@/stores/useConsultationStore";
+import { api } from "@/lib/api";
 
 export default function SecretAdminDashboard() {
-  const users = useAdminManagementStore((state) => state.users);
-  const doctors = useDoctorStore((state) => state.doctors);
+  const [liveUsers, setLiveUsers] = useState<any[]>([]);
+  const [liveDoctors, setLiveDoctors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const consultations = useConsultationStore((state) => state.consultations);
-  
-  const totalPatients = users.filter(u => u.role === 'patient').length;
-  const verifiedDoctorsCount = doctors.filter(d => d.status === 'verified').length;
-  const pendingVerificationsCount = doctors.filter(d => d.status === 'pending').length;
-  const suspendedCount = users.filter(u => u.status === 'suspended').length;
-  const bannedCount = users.filter(u => u.status === 'banned').length;
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        setLoading(true);
+        const [uRes, dRes] = await Promise.allSettled([
+          api.admin.getUsers(),
+          api.admin.getDoctors(),
+        ]);
+        if (uRes.status === "fulfilled" && uRes.value?.users) {
+          setLiveUsers(uRes.value.users);
+        }
+        if (dRes.status === "fulfilled" && dRes.value?.doctors) {
+          setLiveDoctors(dRes.value.doctors);
+        }
+      } catch (e) {
+        console.warn("Failed to load admin stats:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, []);
+
+  const totalPatients = liveUsers.filter((u) => u.role === "patient").length;
+  const verifiedDoctorsCount = liveDoctors.filter((d) => d.status === "verified").length;
+  const pendingVerificationsCount = liveDoctors.filter((d) => d.status === "pending").length;
+  const suspendedCount = liveUsers.filter((u) => u.status === "suspended").length;
+  const bannedCount = liveUsers.filter((u) => u.status === "banned").length;
   const totalRevenue = consultations.reduce((acc, c) => acc + (c.amountPaid || 0), 0);
 
   const stats = [
@@ -73,8 +100,8 @@ export default function SecretAdminDashboard() {
               className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-[#0D9488] hover:bg-gray-50 transition-all group"
             >
               <div>
-                <h3 className="font-bold text-gray-900 group-hover:text-[#0D9488]">All Users Directory ({users.length} Registered)</h3>
-                <p className="text-xs text-gray-500">{totalPatients} Patients • {doctors.length} Doctors</p>
+                <h3 className="font-bold text-gray-900 group-hover:text-[#0D9488]">All Users Directory ({liveUsers.length} Registered)</h3>
+                <p className="text-xs text-gray-500">{totalPatients} Patients • {liveDoctors.length} Doctors</p>
               </div>
               <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0D9488] group-hover:translate-x-1 transition-all" />
             </Link>

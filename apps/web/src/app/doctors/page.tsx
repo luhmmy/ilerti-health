@@ -54,7 +54,17 @@ export default function DoctorsPage() {
       totalConsultations: 12,
     }));
 
-  const allDoctors = [...apiDoctors, ...verifiedStoreDoctors];
+  // Deduplicate between API doctors and local store
+  const doctorMap = new Map<string, any>();
+  for (const doc of apiDoctors) {
+    if (doc.id) doctorMap.set(doc.id, doc);
+  }
+  for (const doc of verifiedStoreDoctors) {
+    if (doc.id && !doctorMap.has(doc.id)) {
+      doctorMap.set(doc.id, doc);
+    }
+  }
+  const allDoctors = Array.from(doctorMap.values());
 
   const filteredDoctors = allDoctors.filter((doc) => {
     const name = `${doc.user?.firstName || ''} ${doc.user?.lastName || ''}`.toLowerCase();

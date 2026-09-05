@@ -1,29 +1,61 @@
 "use client";
 
-import { CheckCircle, XCircle, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle, XCircle, ShieldCheck, RefreshCw } from "lucide-react";
 import { useDoctorStore } from "@/stores/useDoctorStore";
 import { useAdminManagementStore } from "@/stores/useAdminManagementStore";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
 export default function SecretVerificationPage() {
+  const [liveDoctors, setLiveDoctors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const doctors = useDoctorStore((state) => state.doctors);
   const verifyDoctor = useDoctorStore((state) => state.verifyDoctor);
   const rejectDoctor = useDoctorStore((state) => state.rejectDoctor);
   const restoreUser = useAdminManagementStore((state) => state.restoreUser);
   const banUser = useAdminManagementStore((state) => state.banUser);
 
-  const pendingDoctors = doctors.filter(d => d.status === 'pending');
+  const fetchLiveDoctors = async () => {
+    try {
+      setLoading(true);
+      const res = await api.admin.getDoctors();
+      if (res && res.doctors) {
+        setLiveDoctors(res.doctors);
+      }
+    } catch (err) {
+      console.warn("Could not fetch live doctors:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleVerify = (id: string, name: string) => {
+  useEffect(() => {
+    fetchLiveDoctors();
+  }, []);
+
+  const combinedDoctors = liveDoctors.length > 0 ? liveDoctors : doctors;
+  const pendingDoctors = combinedDoctors.filter((d) => d.status === "pending");
+
+  const handleVerify = async (id: string, name: string) => {
+    try {
+      await api.admin.verifyDoctor({ doctorId: id, action: "verify" });
+    } catch {}
     verifyDoctor(id);
     restoreUser(id);
+    fetchLiveDoctors();
     toast.success(`${name} verified as licensed MDCN practitioner!`);
   };
 
-  const handleReject = (id: string, name: string) => {
+  const handleReject = async (id: string, name: string) => {
+    try {
+      await api.admin.verifyDoctor({ doctorId: id, action: "reject" });
+    } catch {}
     rejectDoctor(id);
-    banUser(id, 'MDCN license verification failed');
+    banUser(id, "MDCN license verification failed");
+    fetchLiveDoctors();
     toast.error(`${name} verification rejected.`);
   };
 
@@ -32,11 +64,20 @@ export default function SecretVerificationPage() {
       <div className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-[#1E3A5F]">Doctor Verification Queue</h1>
-          <p className="text-gray-600 mt-2">Review and approve self-registered MDCN practitioners.</p>
+          <p className="text-gray-600 mt-2">Review and approve self-registered MDCN practitioners in real time.</p>
         </div>
-        <Badge className="bg-[#1E3A5F] text-white">
-          {pendingDoctors.length} Pending Request{pendingDoctors.length !== 1 ? 's' : ''}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge className="bg-[#1E3A5F] text-white">
+            {pendingDoctors.length} Pending Request{pendingDoctors.length !== 1 ? "s" : ""}
+          </Badge>
+          <button
+            onClick={fetchLiveDoctors}
+            className="p-2 text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-xl"
+            title="Refresh list"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
