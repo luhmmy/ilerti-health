@@ -1,9 +1,7 @@
 "use client";
 
-import { CheckCircle, XCircle, Eye, AlertCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { useDoctorStore } from "@/stores/useDoctorStore";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,19 +23,16 @@ export default function VerificationPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header />
-      <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="mb-8 flex justify-between items-end">
-            <div>
-              <h1 className="text-3xl font-bold text-[#1E3A5F]">Doctor Verification Queue</h1>
-              <p className="text-gray-600 mt-2">Review and approve self-registered MDCN practitioners.</p>
-            </div>
-            <Badge className="bg-[#1E3A5F] text-white">
-              {pendingDoctors.length} Pending Request{pendingDoctors.length !== 1 ? 's' : ''}
-            </Badge>
-          </div>
+    <div>
+      <div className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-[#1E3A5F]">Doctor Verification Queue</h1>
+          <p className="text-gray-600 mt-2">Review and approve self-registered MDCN practitioners.</p>
+        </div>
+        <Badge className="bg-[#1E3A5F] text-white">
+          {pendingDoctors.length} Pending Request{pendingDoctors.length !== 1 ? 's' : ''}
+        </Badge>
+      </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <table className="w-full text-left border-collapse">
@@ -100,9 +95,6 @@ export default function VerificationPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      </main>
-      <Footer />
     </div>
   );
 }
