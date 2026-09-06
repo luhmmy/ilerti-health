@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { serverDb } from '@/lib/serverDb';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
     const data = await req.json();
     const key = (data.emailOrPhone || data.email || '').toLowerCase().trim();
     const otp = (data.otp || '').trim();
@@ -11,6 +13,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: 'Email/phone and OTP code are required' },
         { status: 400 }
+      );
+    }
+
+    // Rate limit: max 6 verification attempts per 3 minutes
+    const rl = checkRateLimit(`verify_${clientIp}_${key}`, { limit: 6, windowSeconds: 180 });
+    if (!rl.success) {
+      return NextResponse.json(
+        { message: `Too many invalid attempts. Please wait ${rl.resetSeconds} seconds before trying again.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
       );
     }
 

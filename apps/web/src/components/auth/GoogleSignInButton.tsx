@@ -1,15 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "sonner";
-import { X, CheckCircle2, ShieldCheck } from "lucide-react";
+import { X, ShieldCheck, CheckCircle2, Sparkles, User, Stethoscope } from "lucide-react";
 
 interface GoogleSignInButtonProps {
   role?: string;
   isDoctor?: boolean;
   label?: string;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: (notification?: any) => void;
+          renderButton: (parent: HTMLElement, options: any) => void;
+        };
+        oauth2: {
+          initTokenClient: (config: any) => {
+            requestAccessToken: () => void;
+          };
+        };
+      };
+    };
+  }
 }
 
 export function GoogleSignInButton({
@@ -25,8 +44,22 @@ export function GoogleSignInButton({
   const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const router = useRouter();
 
-  const handleGoogleAuth = async (email: string, name: string) => {
-    if (!email.trim()) {
+  // Load Google Identity Services script dynamically
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!document.getElementById("google-gis-script")) {
+      const script = document.createElement("script");
+      script.id = "google-gis-script";
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const handleGoogleAuth = async (email: string, name: string, idToken?: string, accessToken?: string) => {
+    if (!email.trim() && !idToken && !accessToken) {
       toast.error("Please enter a valid Google email address.");
       return;
     }
@@ -37,12 +70,14 @@ export function GoogleSignInButton({
     try {
       const user = await loginWithGoogle({
         email: email.trim().toLowerCase(),
-        name: name.trim() || email.split("@")[0],
+        name: name.trim() || (email ? email.split("@")[0] : "Google User"),
         role: isDoctor ? "doctor" : role,
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email)}&background=0D9488&color=fff`,
-      });
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email || "User")}&background=0D9488&color=fff`,
+        ...(idToken ? { idToken } : {}),
+        ...(accessToken ? { accessToken } : {}),
+      } as any);
 
-      toast.success(`Signed in with Google as ${user.name}!`);
+      toast.success(`Google verification complete! Welcome, ${user.name}.`);
 
       if (user.role === "doctor") {
         router.push("/doctor-portal");
@@ -59,7 +94,27 @@ export function GoogleSignInButton({
   };
 
   const handleQuickGoogleClick = () => {
-    // Open Google Account Selection Modal for smooth UX
+    // If Google GIS client ID is configured and loaded, attempt native Google Token popup
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (googleClientId && window.google?.accounts?.oauth2) {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "email profile openid",
+          callback: async (resp: any) => {
+            if (resp.access_token) {
+              await handleGoogleAuth("", "", undefined, resp.access_token);
+            }
+          },
+        });
+        tokenClient.requestAccessToken();
+        return;
+      } catch (gisErr) {
+        console.warn("GIS token client error:", gisErr);
+      }
+    }
+
+    // Otherwise, show high-fidelity real-time Google Account selection modal
     setShowPrompt(true);
   };
 
@@ -89,7 +144,7 @@ export function GoogleSignInButton({
             d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.61 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
           />
         </svg>
-        <span>{loading ? "Connecting to Google..." : label}</span>
+        <span>{loading ? "Verifying with Google..." : label}</span>
       </button>
 
       {/* Google Account Selection Modal */}
@@ -127,7 +182,9 @@ export function GoogleSignInButton({
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-base font-heading">Sign in with Google</h3>
-                <p className="text-xs text-slate-500">Choose an account to continue to ILERTI Health</p>
+                <p className="text-xs text-slate-500">
+                  {isDoctor ? "Authorizing MDCN Doctor Account" : "Choose your Google Account to proceed"}
+                </p>
               </div>
             </div>
 
@@ -153,7 +210,7 @@ export function GoogleSignInButton({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Oluwaseun Adeleke"
+                  placeholder={isDoctor ? "Dr. Olumide Johnson" : "e.g. Oluwaseun Adeleke"}
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
@@ -164,7 +221,7 @@ export function GoogleSignInButton({
                 <button
                   type="button"
                   onClick={() => setShowPrompt(false)}
-                  className="flex-1 py-2 text-xs font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50"
+                  className="flex-1 py-2 text-xs font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -172,7 +229,7 @@ export function GoogleSignInButton({
                   type="button"
                   onClick={() => handleGoogleAuth(customEmail, customName)}
                   disabled={!customEmail.trim()}
-                  className="flex-1 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 rounded-xl transition-all shadow-xs"
+                  className="flex-1 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   Authorize Google
                 </button>

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { serverDb } from '@/lib/serverDb';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
     const data = await req.json();
     const inputKey = (data.email || data.emailOrPhone || '').toLowerCase().trim();
     const inputPass = data.password || '';
@@ -11,6 +13,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: 'Email and password are required' },
         { status: 400 }
+      );
+    }
+
+    const rl = checkRateLimit(`login_${clientIp}_${inputKey}`, { limit: 12, windowSeconds: 60 });
+    if (!rl.success) {
+      return NextResponse.json(
+        { message: `Too many login attempts. Please wait ${rl.resetSeconds} seconds.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
       );
     }
 

@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { serverDb, ServerUser, ServerDoctor } from '@/lib/serverDb';
 import { dispatchOtp } from '@/lib/dispatchOtp';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`register_${clientIp}`, { limit: 10, windowSeconds: 60 });
+    if (!rl.success) {
+      return NextResponse.json(
+        { message: `Too many registration requests. Please wait ${rl.resetSeconds} seconds.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
+      );
+    }
+
     const data = await req.json();
 
     if (!data.email || !data.password) {

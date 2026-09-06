@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { serverDb } from '@/lib/serverDb';
 import { dispatchOtp } from '@/lib/dispatchOtp';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
     const data = await req.json();
     const key = (data.emailOrPhone || data.email || '').toLowerCase().trim();
 
@@ -11,6 +13,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: 'Email or phone number is required' },
         { status: 400 }
+      );
+    }
+
+    // Rate limit: max 4 resends per 2 minutes per IP / key
+    const rl = checkRateLimit(`resend_${clientIp}_${key}`, { limit: 4, windowSeconds: 120 });
+    if (!rl.success) {
+      return NextResponse.json(
+        { message: `Too many OTP resend attempts. Please wait ${rl.resetSeconds} seconds.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
       );
     }
 
