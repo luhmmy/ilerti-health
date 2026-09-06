@@ -133,25 +133,25 @@ export default function VerifyPage() {
         </div>
         <h2 className="text-2xl font-bold text-slate-900 font-heading">Verify Your Account</h2>
         <p className="text-slate-500 text-xs sm:text-sm mt-1.5 leading-relaxed">
-          We dispatched a 6-digit verification code. Please check your SMS messages and Email inbox to confirm your account:
+          We sent a 6-digit verification code to your email. Please check your inbox (and spam folder) to activate your account:
         </p>
 
         {/* Channel Indicators */}
         <div className="mt-3 space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
-          {displayPhone && (
-            <div className="flex items-center justify-between text-slate-700">
-              <span className="flex items-center gap-1.5 font-medium">
-                <Smartphone className="w-3.5 h-3.5 text-teal-600" /> SMS Sent To:
-              </span>
-              <span className="font-bold text-slate-900">{displayPhone}</span>
-            </div>
-          )}
           {displayEmail && (
             <div className="flex items-center justify-between text-slate-700">
               <span className="flex items-center gap-1.5 font-medium">
-                <Mail className="w-3.5 h-3.5 text-teal-600" /> Email Sent To:
+                <Mail className="w-3.5 h-3.5 text-teal-600" /> Code Sent To Email:
               </span>
-              <span className="font-bold text-slate-900 truncate max-w-[180px]">{displayEmail}</span>
+              <span className="font-bold text-slate-900 truncate max-w-[200px]">{displayEmail}</span>
+            </div>
+          )}
+          {displayPhone && (
+            <div className="flex items-center justify-between text-slate-500 text-[11px]">
+              <span className="flex items-center gap-1.5">
+                <Smartphone className="w-3 h-3 text-slate-400" /> Phone on file:
+              </span>
+              <span className="font-medium text-slate-700">{displayPhone}</span>
             </div>
           )}
         </div>
