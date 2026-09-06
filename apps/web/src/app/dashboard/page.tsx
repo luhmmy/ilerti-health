@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { UserDashboardSidebar } from "@/components/dashboard/UserDashboardSidebar";
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
@@ -67,7 +68,18 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-stone-50 flex flex-col">
       <Header />
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start gap-8">
+          
+          {/* Desktop User Dashboard Sidebar */}
+          <div className="hidden lg:block lg:w-72 shrink-0">
+            <UserDashboardSidebar 
+              onOpenVitalsModal={() => setVitalsModalOpen(true)}
+              onOpenScannerModal={() => setScannerOpen(true)}
+            />
+          </div>
+
+          {/* Main Dashboard Content */}
+          <div className="flex-1 min-w-0 w-full space-y-8">
           
           {/* Doctor Portal Quick Switch Banner (If Doctor) */}
           {user?.role === "doctor" && (
@@ -187,47 +199,47 @@ export default function DashboardPage() {
           {/* Quick Actions Grid */}
           <div>
             <h2 className="text-xl font-bold text-[#1E3A5F] mb-4 font-heading">Quick Actions</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              <Link href="/ai" className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group text-center">
-                <div className="bg-teal-50 p-4 rounded-2xl text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-sm">
-                  <Activity className="w-6 h-6" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
+              <Link href="/ai" className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2.5 sm:gap-3 group text-center">
+                <div className="bg-teal-50 p-3.5 rounded-2xl text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-sm">
+                  <Activity className="w-5 h-5 sm:w-6 h-6" />
                 </div>
-                <span className="font-bold text-slate-800 text-sm">AI Symptom Triage</span>
+                <span className="font-bold text-slate-800 text-xs sm:text-sm">AI Symptom Triage</span>
               </Link>
               
-              <Link href="/doctors" className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group text-center">
-                <div className="bg-blue-50 p-4 rounded-2xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                  <Stethoscope className="w-6 h-6" />
+              <Link href="/doctors" className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2.5 sm:gap-3 group text-center">
+                <div className="bg-blue-50 p-3.5 rounded-2xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                  <Stethoscope className="w-5 h-5 sm:w-6 h-6" />
                 </div>
-                <span className="font-bold text-slate-800 text-sm">Consult Doctor</span>
+                <span className="font-bold text-slate-800 text-xs sm:text-sm">Consult Doctor</span>
               </Link>
               
-              <Link href="/facilities" className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group text-center">
-                <div className="bg-rose-50 p-4 rounded-2xl text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
-                  <Search className="w-6 h-6" />
+              <Link href="/facilities" className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2.5 sm:gap-3 group text-center">
+                <div className="bg-rose-50 p-3.5 rounded-2xl text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
+                  <Search className="w-5 h-5 sm:w-6 h-6" />
                 </div>
-                <span className="font-bold text-slate-800 text-sm">Find Hospital</span>
+                <span className="font-bold text-slate-800 text-xs sm:text-sm">Find Hospital</span>
               </Link>
               
-              <Link href="/health/records" className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group text-center">
-                <div className="bg-purple-50 p-4 rounded-2xl text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
-                  <FileHeart className="w-6 h-6" />
+              <Link href="/health/records" className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2.5 sm:gap-3 group text-center">
+                <div className="bg-purple-50 p-3.5 rounded-2xl text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                  <FileHeart className="w-5 h-5 sm:w-6 h-6" />
                 </div>
-                <span className="font-bold text-slate-800 text-sm">Health Vault</span>
+                <span className="font-bold text-slate-800 text-xs sm:text-sm">Health Vault</span>
               </Link>
               
-              <Link href="/wellness/nutrition" className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group text-center col-span-2 sm:col-span-1">
-                <div className="bg-emerald-50 p-4 rounded-2xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
-                  <Utensils className="w-6 h-6" />
+              <Link href="/wellness/nutrition" className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all flex flex-col items-center justify-center gap-2.5 sm:gap-3 group text-center col-span-2 sm:col-span-1">
+                <div className="bg-emerald-50 p-3.5 rounded-2xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                  <Utensils className="w-5 h-5 sm:w-6 h-6" />
                 </div>
-                <span className="font-bold text-slate-800 text-sm">Meal Planner</span>
+                <span className="font-bold text-slate-800 text-xs sm:text-sm">Meal Planner</span>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Left Col - 2 spans */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="xl:col-span-2 space-y-8">
               
               {/* Consultations */}
               <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
@@ -415,7 +427,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
+    </main>
       <Footer />
 
       <HydrationScannerModal
