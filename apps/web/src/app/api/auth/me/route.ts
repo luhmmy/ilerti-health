@@ -15,9 +15,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: 'Invalid or expired token' }, { status: 401 });
     }
 
-    const user = serverDb.users.get(decoded.email);
+    // Direct database query — if user was wiped, this immediately returns null and 401
+    const user = await serverDb.getUser(decoded.email);
     if (!user) {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+      return NextResponse.json({ message: 'User account not found or has been wiped' }, { status: 401 });
     }
 
     return NextResponse.json({

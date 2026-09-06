@@ -14,7 +14,7 @@ const API_URL = '/api';
 function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = localStorage.getItem('ilerti-v5-auth') || localStorage.getItem('ilerti-auth');
+    const raw = localStorage.getItem('ilerti-v6-auth') || localStorage.getItem('ilerti-v5-auth') || localStorage.getItem('ilerti-auth');
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     const token = parsed.state?.token;
