@@ -64,15 +64,17 @@ export async function dispatchOtp(
   // 2. Send Email via Resend (if RESEND_API_KEY is configured or fallback)
   if (email && email.includes('@')) {
     try {
-      if (process.env.RESEND_API_KEY) {
-        const res = await fetch('https://api.resend.com/emails', {
+        let data: any = null;
+        let fromAddress = process.env.RESEND_FROM_EMAIL || 'ILERTI Health <security@ilertihealth.site>';
+        
+        let res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: process.env.RESEND_FROM_EMAIL || 'ILERTI Health <security@ilertihealth.site>',
+            from: fromAddress,
             to: [email.trim().toLowerCase()],
             subject: `${otp} is your ILERTI Health verification code`,
             html: `
@@ -103,16 +105,40 @@ export async function dispatchOtp(
             `,
           }),
         });
-        const data = await res.json();
+
+        data = await res.json();
+
+        // Fallback: If custom domain is not yet active on Resend's cluster, retry with onboarding@resend.dev
+        if (!res.ok && data?.message && (data.message.includes('domain') || data.message.includes('not verified'))) {
+          console.warn('Custom domain sending issue, retrying with default Resend sender...');
+          const fallbackRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            },
+            body: JSON.stringify({
+              from: 'ILERTI Health <onboarding@resend.dev>',
+              to: [email.trim().toLowerCase()],
+              subject: `${otp} is your ILERTI Health verification code`,
+              html: `<div style="font-family: sans-serif; padding: 20px; text-align: center;"><h2>ILERTI Health Verification</h2><p>Your 6-digit code is:</p><h1 style="color:#0D9488; letter-spacing: 5px;">${otp}</h1><p>Valid for 10 minutes.</p></div>`,
+            }),
+          });
+          data = await fallbackRes.json();
+          if (fallbackRes.ok || data.id) {
+            result.emailSent = true;
+          }
+        }
+
         console.log(`📧 Resend Email Response for ${email}:`, data);
-        if (data.id || res.ok) {
+        if (data?.id || res.ok) {
           result.emailSent = true;
         } else {
-          result.emailError = data.message || 'Resend delivery issue';
+          result.emailError = data?.message || 'Resend delivery issue';
         }
       } else {
         console.log(`📧 [DEV EMAIL DISPATCH] To: ${email} | OTP: ${otp}`);
-        result.emailSent = true; // Simulated success in development
+        result.emailSent = true;
       }
     } catch (emailErr: any) {
       console.warn('Email dispatch warning:', emailErr);

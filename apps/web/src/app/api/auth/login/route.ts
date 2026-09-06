@@ -62,6 +62,18 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if account email has been verified via OTP
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { 
+          message: 'Your account is not verified yet. Please enter the 6-digit OTP sent to your email.',
+          requiresVerification: true,
+          email: user.email,
+        },
+        { status: 403 }
+      );
+    }
+
     const token = serverDb.signToken({
       userId: user.id,
       email: user.email,
