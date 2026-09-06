@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Stethoscope, User, Lock, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
 
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+
 export default function LoginPage() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -88,6 +90,25 @@ export default function LoginPage() {
         >
           <Stethoscope className="w-3.5 h-3.5" /> Doctor Portal
         </button>
+      </div>
+
+      {/* Google Sign In Option */}
+      <div className="mb-5">
+        <GoogleSignInButton 
+          isDoctor={isDoctorTab} 
+          role={isDoctorTab ? "doctor" : "patient"}
+          label={isDoctorTab ? "Sign In as Doctor with Google" : "Continue with Google"} 
+        />
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-slate-400 font-medium tracking-wider">
+              Or sign in with email
+            </span>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

@@ -57,6 +57,12 @@ export const api = {
         body: JSON.stringify(credentials),
       });
     },
+    google: async (payload: { email: string; name?: string; avatarUrl?: string; role?: string }) => {
+      return await fetchJson('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    },
     register: async (userData: any) => {
       return await fetchJson('/auth/register', {
         method: 'POST',

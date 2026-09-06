@@ -31,6 +31,7 @@ interface AuthState {
   tempOtp: string | null;
   pendingEmailOrPhone: string | null;
   login: (credentials: { email?: string; emailOrPhone?: string; password?: string; role?: string }) => Promise<User>;
+  loginWithGoogle: (googleData: { email: string; name?: string; avatarUrl?: string; role?: string }) => Promise<User>;
   register: (userData: any) => Promise<any>;
   setVerified: () => void;
   setTempOtp: (otp: string | null) => void;
@@ -110,6 +111,37 @@ export const useAuthStore = create<AuthState>()(
         } catch (apiErr: any) {
           const errMsg = apiErr?.message || 'Login failed. Please verify your credentials or register an account.';
           throw new Error(errMsg);
+        }
+      },
+
+      loginWithGoogle: async (googleData) => {
+        try {
+          const data = await api.auth.google(googleData);
+          if (data && data.user) {
+            const isDoctor = (data.user.role || '').toUpperCase() === 'DOCTOR' || Boolean(data.user.doctor);
+            const userRole: User['role'] = isDoctor ? 'doctor' : (data.user.role?.toLowerCase() as any) || 'patient';
+
+            const userObj: User = {
+              id: data.user.id || `u-${Date.now()}`,
+              name: data.user.name || `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim() || data.user.email || 'User',
+              email: data.user.email,
+              phone: data.user.phone,
+              role: userRole,
+              avatar: data.user.avatarUrl,
+              specialty: data.user.specialty || (isDoctor ? 'General Practice' : undefined),
+              mdcnFolio: data.user.mdcnFolio,
+              hospitalAffiliation: data.user.hospitalAffiliation,
+              verificationStatus: data.user.verificationStatus || (isDoctor ? 'PENDING' : 'VERIFIED'),
+              isAvailable: true,
+            };
+
+            useProfileStore.getState().resetProfile();
+            set({ user: userObj, token: data.access_token || 'google-auth-token', isAuthenticated: true, pendingEmailOrPhone: null });
+            return userObj;
+          }
+          throw new Error('Google authentication failed. Please try again.');
+        } catch (error: any) {
+          throw new Error(error?.message || 'Failed to authenticate with Google');
         }
       },
 

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "../../../components/ui/button";
 import Link from "next/link";
 import { Check, X, Eye, EyeOff, ShieldCheck, User, Stethoscope } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default function SignupPage() {
   const [isDoctor, setIsDoctor] = useState(false);
@@ -126,6 +127,25 @@ export default function SignupPage() {
         >
           <Stethoscope className="w-4 h-4" /> MDCN Doctor
         </button>
+      </div>
+
+      {/* Google Sign Up Option */}
+      <div className="mb-5">
+        <GoogleSignInButton 
+          isDoctor={isDoctor} 
+          role={isDoctor ? "doctor" : "patient"}
+          label={isDoctor ? "Register as Doctor with Google" : "Sign Up with Google"} 
+        />
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-slate-400 font-medium tracking-wider">
+              Or register with email
+            </span>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
