@@ -72,7 +72,7 @@ export async function dispatchOtp(
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: process.env.RESEND_FROM_EMAIL || 'ILERTI Health <onboarding@resend.dev>',
+            from: process.env.RESEND_FROM_EMAIL || 'ILERTI Health <security@ilertihealth.site>',
             to: [email.trim().toLowerCase()],
             subject: `${otp} is your ILERTI Health verification code`,
             html: `
