@@ -96,7 +96,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 my-8">
+    <div className="w-full bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 my-4">
       <div className="text-center mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-[#1E3A5F] font-heading">
           Create Your ILERTI Account
