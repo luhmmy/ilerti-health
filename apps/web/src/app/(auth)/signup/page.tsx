@@ -134,7 +134,7 @@ export default function SignupPage() {
         <GoogleSignInButton 
           isDoctor={isDoctor} 
           role={isDoctor ? "doctor" : "patient"}
-          label={isDoctor ? "Register as Doctor with Google" : "Sign Up with Google"} 
+          label={isDoctor ? "Sign up as Doctor with Google" : "Sign up with Google"} 
         />
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">

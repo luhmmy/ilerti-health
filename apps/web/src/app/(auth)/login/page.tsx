@@ -97,7 +97,7 @@ export default function LoginPage() {
         <GoogleSignInButton 
           isDoctor={isDoctorTab} 
           role={isDoctorTab ? "doctor" : "patient"}
-          label={isDoctorTab ? "Sign In as Doctor with Google" : "Continue with Google"} 
+          label={isDoctorTab ? "Sign in as Doctor with Google" : "Sign in with Google"} 
         />
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
