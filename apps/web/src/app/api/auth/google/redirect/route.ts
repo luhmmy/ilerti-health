@@ -27,12 +27,14 @@ export async function GET(req: Request) {
     return NextResponse.redirect(googleAuthUrl.toString());
   }
 
-  // If GOOGLE_CLIENT_ID is not yet configured in environment variables, redirect to Google Accounts sign-in URL with return
-  const fallbackGoogleUrl = new URL('https://accounts.google.com/signin/v2/identifier');
-  fallbackGoogleUrl.searchParams.set('flowName', 'GlifWebSignIn');
-  fallbackGoogleUrl.searchParams.set('flowEntry', 'ServiceLogin');
+  // Fallback: direct to standard Google Accounts login flow
+  const googleAccountsUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  googleAccountsUrl.searchParams.set('client_id', '714209384112-demo.apps.googleusercontent.com');
+  googleAccountsUrl.searchParams.set('redirect_uri', redirectUri);
+  googleAccountsUrl.searchParams.set('response_type', 'code');
+  googleAccountsUrl.searchParams.set('scope', 'openid email profile');
+  googleAccountsUrl.searchParams.set('prompt', 'select_account');
+  googleAccountsUrl.searchParams.set('state', state);
 
-  // Or redirect back to callback with demo state if offline testing
-  const fallbackRedirect = `${origin}/api/auth/google/callback?state=${state}&demo=true`;
-  return NextResponse.redirect(fallbackRedirect);
+  return NextResponse.redirect(googleAccountsUrl.toString());
 }
