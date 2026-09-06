@@ -21,7 +21,9 @@ import {
   Sparkles,
   Droplets,
   User as UserIcon,
-  Activity
+  Activity,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useProfileStore } from "@/stores/useProfileStore";
@@ -31,16 +33,24 @@ import { getInitials } from "@/lib/utils";
 interface UserDashboardSidebarProps {
   onOpenVitalsModal?: () => void;
   onOpenScannerModal?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export function UserDashboardSidebar({ 
   onOpenVitalsModal,
-  onOpenScannerModal 
+  onOpenScannerModal,
+  isCollapsed = false,
+  onToggleCollapse,
 }: UserDashboardSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const profile = useProfileStore();
   const { currentIntakeMl, dailyGoalMl } = useHydrationStore();
+  const [internalCollapsed, setInternalCollapsed] = React.useState(false);
+
+  const collapsed = onToggleCollapse ? isCollapsed : internalCollapsed;
+  const toggle = onToggleCollapse || (() => setInternalCollapsed(!internalCollapsed));
 
   const userName = user?.name || user?.email?.split("@")[0] || "Health User";
   const userEmail = user?.email || "patient@ilertihealth.site";
@@ -144,11 +154,83 @@ export function UserDashboardSidebar({
     },
   ];
 
+  if (collapsed) {
+    return (
+      <aside className="w-16 shrink-0 bg-white rounded-3xl border border-slate-200 shadow-sm p-3 flex flex-col justify-between items-center space-y-6 lg:sticky lg:top-24 h-fit transition-all duration-300">
+        <div className="flex flex-col items-center space-y-4 w-full">
+          <button
+            type="button"
+            onClick={toggle}
+            className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 flex items-center justify-center transition-colors cursor-pointer"
+            title="Expand Sidebar"
+          >
+            <PanelLeftOpen className="w-5 h-5" />
+          </button>
+
+          <div 
+            onClick={onOpenVitalsModal}
+            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#0D9488] text-white font-bold text-xs flex items-center justify-center cursor-pointer shadow-xs"
+            title={`${userName} (${userRole}) - Click to edit vitals`}
+          >
+            {initials || <UserIcon className="w-4 h-4" />}
+          </div>
+
+          <div className="w-8 h-px bg-slate-200 my-1" />
+
+          {/* Collapsed Nav Icons */}
+          <nav className="flex flex-col items-center space-y-2 w-full">
+            {navSections.flatMap((s) => s.items).map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                    isActive
+                      ? "bg-[#0D9488] text-white shadow-xs"
+                      : "text-slate-500 hover:text-[#1E3A5F] hover:bg-slate-100"
+                  }`}
+                  title={item.label}
+                >
+                  <Icon className="w-4 h-4" />
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => logout()}
+          className="w-10 h-10 rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
+          title="Sign Out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="w-full lg:w-72 shrink-0 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col justify-between space-y-6 lg:sticky lg:top-24 h-fit">
+    <aside className="w-full lg:w-72 shrink-0 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col justify-between space-y-6 lg:sticky lg:top-24 h-fit transition-all duration-300">
       
-      {/* Top: User Profile Card */}
+      {/* Top: User Profile Card & Collapse Toggle */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Health Navigator
+          </span>
+          <button
+            type="button"
+            onClick={toggle}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Collapse Sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        </div>
+
         <div className="p-4 bg-gradient-to-br from-[#1E3A5F] to-[#0D9488] rounded-2xl text-white shadow-sm relative overflow-hidden">
           <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl pointer-events-none" />
           

@@ -60,6 +60,8 @@ export default function DashboardPage() {
     toast.success(`Logged +${ml}ml water intake!`);
   };
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   return (
     <AuthGuard 
       serviceName="Personal Health Dashboard"
@@ -68,11 +70,13 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-stone-50 flex flex-col">
       <Header />
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start gap-8">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start gap-6 lg:gap-8">
           
-          {/* Desktop User Dashboard Sidebar */}
-          <div className="hidden lg:block lg:w-72 shrink-0">
+          {/* Desktop User Dashboard Sidebar (Collapsible & Expandable) */}
+          <div className={`hidden lg:block shrink-0 transition-all duration-300 ${sidebarCollapsed ? "w-16" : "w-72"}`}>
             <UserDashboardSidebar 
+              isCollapsed={sidebarCollapsed}
+              onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
               onOpenVitalsModal={() => setVitalsModalOpen(true)}
               onOpenScannerModal={() => setScannerOpen(true)}
             />

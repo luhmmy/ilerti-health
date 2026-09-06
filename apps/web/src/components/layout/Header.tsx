@@ -62,61 +62,8 @@ export function Header() {
         <div className="flex items-center gap-6">
           <BrandLogo size="md" />
 
-          {/* Desktop Navigation */}
-          {isAuthenticated ? (
-            <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-navy-700">
-              <Link 
-                href="/dashboard" 
-                className={`transition-colors hover:text-primary-600 ${pathname === '/dashboard' ? 'text-primary-600 font-bold' : ''}`}
-              >
-                Dashboard
-              </Link>
-              <Link 
-                href="/ai" 
-                className={`flex items-center gap-1.5 transition-colors font-semibold ${pathname === '/ai' ? 'text-teal-700' : 'text-primary-600 hover:text-primary-700'}`}
-              >
-                <Sparkles className="w-4 h-4 text-amber-500" /> AI Triage
-              </Link>
-              <Link 
-                href="/doctors" 
-                className={`transition-colors hover:text-primary-600 ${pathname?.startsWith('/doctors') ? 'text-primary-600 font-bold' : ''}`}
-              >
-                Doctors
-              </Link>
-              <Link 
-                href="/facilities" 
-                className={`transition-colors hover:text-primary-600 ${pathname === '/facilities' ? 'text-primary-600 font-bold' : ''}`}
-              >
-                Facilities
-              </Link>
-              <Link 
-                href="/wellness" 
-                className={`transition-colors hover:text-primary-600 ${pathname?.startsWith('/wellness') ? 'text-primary-600 font-bold' : ''}`}
-              >
-                Wellness
-              </Link>
-              <Link 
-                href="/health" 
-                className={`transition-colors hover:text-primary-600 ${pathname?.startsWith('/health') ? 'text-primary-600 font-bold' : ''}`}
-              >
-                Records
-              </Link>
-              <Link 
-                href="/pricing" 
-                className={`transition-colors hover:text-primary-600 ${pathname === '/pricing' ? 'text-primary-600 font-bold' : ''}`}
-              >
-                Pricing
-              </Link>
-              {user?.role === "admin" && (
-                <Link 
-                  href="/console-x9k2v-sys" 
-                  className={`flex items-center gap-1 transition-colors px-2 py-0.5 rounded-full text-xs font-semibold bg-navy-900 text-teal-300 hover:bg-navy-800 ${pathname?.startsWith('/console-x9k2v-sys') ? 'ring-2 ring-teal-400' : ''}`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" /> Admin
-                </Link>
-              )}
-            </nav>
-          ) : (
+          {/* Desktop Navigation: Only shown for public unauthenticated visitors */}
+          {!isAuthenticated ? (
             <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-navy-700">
               <Link href="/about" className={`transition-colors hover:text-primary-600 ${pathname === '/about' ? 'text-primary-600 font-bold' : ''}`}>
                 About
@@ -137,7 +84,7 @@ export function Header() {
                 Contact
               </Link>
             </nav>
-          )}
+          ) : null}
         </div>
 
         {/* Right Section: Profile & Actions + Mobile Hamburger Toggle */}
