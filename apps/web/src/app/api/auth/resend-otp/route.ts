@@ -47,8 +47,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'New verification code sent',
-      verificationCode: otp,
+      message: 'New verification code sent via SMS and Email',
     });
   } catch (error: any) {
     return NextResponse.json(

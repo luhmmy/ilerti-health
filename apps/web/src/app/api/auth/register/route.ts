@@ -135,7 +135,6 @@ export async function POST(req: Request) {
         verificationStatus: newUser.verificationStatus,
       },
       otpSent: true,
-      verificationCode: otp,
     });
   } catch (error: any) {
     return NextResponse.json(

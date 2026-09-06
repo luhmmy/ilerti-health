@@ -198,15 +198,14 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: newUser,
           token: serverResponse.access_token || `token-${Date.now()}`,
-          isAuthenticated: false, // Must verify OTP
-          tempOtp: verificationOtp,
+          isAuthenticated: false, // Must verify OTP in real time
+          tempOtp: null,
           pendingEmailOrPhone: email || userData.phone,
         });
 
         return {
           success: true,
-          message: 'Account registered successfully',
-          verificationCode: verificationOtp,
+          message: 'Account registered successfully. Check your SMS and Email for verification code.',
           user: newUser,
         };
       },
