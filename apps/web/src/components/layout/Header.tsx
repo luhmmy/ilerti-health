@@ -61,30 +61,6 @@ export function Header() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between px-4 sm:px-6 border-b bg-white/95 backdrop-blur-md transition-all shadow-xs">
         <div className="flex items-center gap-6">
           <BrandLogo size="md" />
-
-          {/* Desktop Navigation: Only shown for public unauthenticated visitors */}
-          {!isAuthenticated ? (
-            <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-navy-700">
-              <Link href="/about" className={`transition-colors hover:text-primary-600 ${pathname === '/about' ? 'text-primary-600 font-bold' : ''}`}>
-                About
-              </Link>
-              <Link href="/ai" className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-semibold">
-                <Sparkles className="w-4 h-4 text-amber-500" /> AI Navigation
-              </Link>
-              <Link href="/doctors" className="hover:text-primary-600 transition-colors">
-                Doctors
-              </Link>
-              <Link href="/facilities" className="hover:text-primary-600 transition-colors">
-                Facilities
-              </Link>
-              <Link href="/pricing" className="hover:text-primary-600 transition-colors">
-                Pricing
-              </Link>
-              <Link href="/contact" className="hover:text-primary-600 transition-colors">
-                Contact
-              </Link>
-            </nav>
-          ) : null}
         </div>
 
         {/* Right Section: Profile & Actions + Mobile Hamburger Toggle */}

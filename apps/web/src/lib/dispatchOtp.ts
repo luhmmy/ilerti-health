@@ -64,6 +64,7 @@ export async function dispatchOtp(
   // 2. Send Email via Resend (if RESEND_API_KEY is configured or fallback)
   if (email && email.includes('@')) {
     try {
+      if (process.env.RESEND_API_KEY) {
         let data: any = null;
         let fromAddress = process.env.RESEND_FROM_EMAIL || 'ILERTI Health <security@ilertihealth.site>';
         
