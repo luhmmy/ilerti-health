@@ -152,6 +152,7 @@ export default function SecretAdminLayout({
     if (isValid) {
       setMfaVerified(true);
       sessionStorage.setItem("ilerti_admin_mfa_passed", "true");
+      localStorage.setItem("ilerti_google_auth_linked", "true");
       useAuthStore.setState({
         isAuthenticated: true,
         user: {
