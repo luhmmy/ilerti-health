@@ -1,0 +1,16 @@
+{
+  "name": "ILERTI Health",
+  "short_name": "ILERTI",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#0D9488",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+}

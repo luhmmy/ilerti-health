@@ -10,6 +10,14 @@ const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-pl
 export const metadata: Metadata = {
   title: 'ILERTI Health | Your Health Journey Starts Here',
   description: 'ILERTI connects you to trusted health information, verified doctors, healthcare facilities, and personalized wellness — all in one place.',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', sizes: 'any' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
   openGraph: {
     title: 'ILERTI Health',
     description: 'A digital health ecosystem for lifelong, accessible and preventive healthcare in Nigeria.',
