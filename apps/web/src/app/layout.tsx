@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ilertihealth.site'),
   title: 'ILERTI Health | Your Health Journey Starts Here',
   description: 'ILERTI connects you to trusted health information, verified doctors, healthcare facilities, and personalized wellness — all in one place.',
   icons: {
