@@ -8,22 +8,20 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-plus-jakarta' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ilertihealth.site'),
   title: 'ILERTI Health | Your Health Journey Starts Here',
   description: 'ILERTI connects you to trusted health information, verified doctors, healthcare facilities, and personalized wellness — all in one place.',
   icons: {
     icon: [
-      { url: '/logo.jpg', type: 'image/jpeg' },
       { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', sizes: 'any' },
     ],
-    shortcut: '/logo.jpg',
-    apple: '/logo.jpg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
   },
   openGraph: {
     title: 'ILERTI Health',
     description: 'A digital health ecosystem for lifelong, accessible and preventive healthcare in Nigeria.',
     type: 'website',
-    images: [{ url: '/logo.jpg' }],
   },
 };
 
