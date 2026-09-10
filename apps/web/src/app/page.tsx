@@ -118,7 +118,7 @@ export default function Home() {
                 <Button asChild size="lg" className="w-full sm:w-auto bg-[#0D9488] hover:bg-[#0f766e] text-white shadow-md text-sm font-bold">
                   <Link href={user?.role === "doctor" ? "/doctor-portal" : "/dashboard"}>
                     <LayoutDashboard className="w-4 h-4 mr-2" /> 
-                    {user?.role === "doctor" ? "Open Doctor Portal" : "Go to Dashboard"}
+                    {user?.role === "doctor" ? "Open Practitioner Portal" : "Go to Dashboard"}
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto text-sm border-slate-300">

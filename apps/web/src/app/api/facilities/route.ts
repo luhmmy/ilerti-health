@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 const FACILITIES = [
   {
@@ -40,5 +41,13 @@ const FACILITIES = [
 ];
 
 export async function GET(req: Request) {
+  try {
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`facilities_${clientIp}`, { limit: 20, windowSeconds: 60 });
+    if (!rl.success) {
+      return NextResponse.json({ message: 'Too many requests' }, { status: 429 });
+    }
+  } catch(e) {}
+  const { searchParams } = new URL(req.url);
   return NextResponse.json(FACILITIES);
 }

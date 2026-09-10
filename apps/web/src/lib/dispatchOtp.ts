@@ -6,6 +6,7 @@ export interface DispatchResult {
   smsError?: string;
   emailError?: string;
   code: string;
+  isSimulated?: boolean;
 }
 
 export async function dispatchOtp(
@@ -13,13 +14,26 @@ export async function dispatchOtp(
   phone: string | undefined, 
   otp: string
 ): Promise<DispatchResult> {
+  const isTermiiConfigured = Boolean(
+    process.env.TERMII_API_KEY && 
+    !process.env.TERMII_API_KEY.includes('PASTE_') && 
+    process.env.TERMII_API_KEY.length > 8
+  );
+
+  const isResendConfigured = Boolean(
+    process.env.RESEND_API_KEY && 
+    !process.env.RESEND_API_KEY.includes('PASTE_') && 
+    process.env.RESEND_API_KEY.startsWith('re_')
+  );
+
   const result: DispatchResult = {
     smsSent: false,
     emailSent: false,
     code: otp,
+    isSimulated: !isTermiiConfigured && !isResendConfigured,
   };
 
-  // 1. Send SMS via Termii (if TERMII_API_KEY is configured or fallback)
+  // 1. Send SMS via Termii (if genuine TERMII_API_KEY is configured)
   if (phone) {
     try {
       let cleanPhone = phone.trim().replace(/[^0-9]/g, '');
@@ -29,7 +43,7 @@ export async function dispatchOtp(
         cleanPhone = '234' + cleanPhone;
       }
 
-      if (process.env.TERMII_API_KEY) {
+      if (isTermiiConfigured) {
         const termiiPayload = {
           to: cleanPhone,
           from: process.env.TERMII_SENDER_ID || 'Termii',
@@ -52,8 +66,13 @@ export async function dispatchOtp(
           result.smsError = data.message || 'Termii delivery issue';
         }
       } else {
-        console.log(`📱 [DEV SMS DISPATCH] To: +${cleanPhone} | Message: Your ILERTI Health OTP is ${otp}`);
-        result.smsSent = true; // Simulated success in development
+        console.log(`\n==================================================`);
+        console.log(`📱 [SMS OTP DISPATCH (DEV)]`);
+        console.log(`   To: +${cleanPhone}`);
+        console.log(`   Verification Code: ${otp}`);
+        console.log(`   (Configure TERMII_API_KEY in .env to send real SMS)`);
+        console.log(`==================================================\n`);
+        result.smsSent = true;
       }
     } catch (smsErr: any) {
       console.warn('SMS dispatch warning:', smsErr);
@@ -61,13 +80,40 @@ export async function dispatchOtp(
     }
   }
 
-  // 2. Send Email via Resend (if RESEND_API_KEY is configured or fallback)
+  // 2. Send Email via Resend (if genuine RESEND_API_KEY is configured)
   if (email && email.includes('@')) {
     try {
-      if (process.env.RESEND_API_KEY) {
-        let data: any = null;
+      if (isResendConfigured) {
+        const emailHtml = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h1 style="color: #0D9488; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">ILERTI Health</h1>
+              <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">Nigeria's Digital Health Ecosystem</p>
+            </div>
+            
+            <p style="color: #334155; font-size: 15px; line-height: 1.5; margin-bottom: 16px;">
+              Hello, thank you for verifying your ILERTI Health account. Use the 6-digit one-time passcode below to proceed:
+            </p>
+
+            <div style="background: #f0fdfa; border: 1.5px solid #99f6e4; padding: 20px; text-align: center; border-radius: 16px; margin: 24px 0;">
+              <span style="font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #0f766e; font-family: monospace;">${otp}</span>
+            </div>
+
+            <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">
+              ⏱️ This code is valid for <strong>10 minutes</strong>. If you did not request this verification, please disregard this email.
+            </p>
+
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; text-align: center;">
+              <p style="color: #94a3b8; font-size: 11px; margin: 0;">
+                © 2026 ILERTI Health. All rights reserved. • Made with care for Nigeria 🇳🇬
+              </p>
+            </div>
+          </div>
+        `;
+
         let fromAddress = process.env.RESEND_FROM_EMAIL || 'ILERTI Health <security@ilertihealth.site>';
         
+        let data: any = null;
         let res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -78,32 +124,7 @@ export async function dispatchOtp(
             from: fromAddress,
             to: [email.trim().toLowerCase()],
             subject: `${otp} is your ILERTI Health verification code`,
-            html: `
-              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                  <h1 style="color: #0D9488; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">ILERTI Health</h1>
-                  <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">Nigeria's Digital Health Ecosystem</p>
-                </div>
-                
-                <p style="color: #334155; font-size: 15px; line-height: 1.5; margin-bottom: 16px;">
-                  Hello, thank you for verifying your ILERTI Health account. Use the 6-digit one-time passcode below to proceed:
-                </p>
-
-                <div style="background: #f0fdfa; border: 1.5px solid #99f6e4; padding: 20px; text-align: center; border-radius: 16px; margin: 24px 0;">
-                  <span style="font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #0f766e; font-family: monospace;">${otp}</span>
-                </div>
-
-                <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">
-                  ⏱️ This code is valid for <strong>10 minutes</strong>. If you did not request this verification, please disregard this email.
-                </p>
-
-                <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; text-align: center;">
-                  <p style="color: #94a3b8; font-size: 11px; margin: 0;">
-                    © 2026 ILERTI Health. All rights reserved. • Made with care for Nigeria 🇳🇬
-                  </p>
-                </div>
-              </div>
-            `,
+            html: emailHtml,
           }),
         });
 
@@ -122,11 +143,13 @@ export async function dispatchOtp(
               from: 'ILERTI Health <onboarding@resend.dev>',
               to: [email.trim().toLowerCase()],
               subject: `${otp} is your ILERTI Health verification code`,
-              html: `<div style="font-family: sans-serif; padding: 20px; text-align: center;"><h2>ILERTI Health Verification</h2><p>Your 6-digit code is:</p><h1 style="color:#0D9488; letter-spacing: 5px;">${otp}</h1><p>Valid for 10 minutes.</p></div>`,
+              html: emailHtml,
             }),
           });
-          data = await fallbackRes.json();
-          if (fallbackRes.ok || data.id) {
+          const fallbackData = await fallbackRes.json();
+          if (fallbackRes.ok || fallbackData.id) {
+            data = fallbackData;
+            res = fallbackRes;
             result.emailSent = true;
           }
         }
@@ -138,7 +161,12 @@ export async function dispatchOtp(
           result.emailError = data?.message || 'Resend delivery issue';
         }
       } else {
-        console.log(`📧 [DEV EMAIL DISPATCH] To: ${email} | OTP: ${otp}`);
+        console.log(`\n==================================================`);
+        console.log(`📧 [EMAIL OTP DISPATCH (DEV)]`);
+        console.log(`   To: ${email}`);
+        console.log(`   Verification Code: ${otp}`);
+        console.log(`   (Configure RESEND_API_KEY in .env to send real emails)`);
+        console.log(`==================================================\n`);
         result.emailSent = true;
       }
     } catch (emailErr: any) {

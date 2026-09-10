@@ -69,23 +69,30 @@ export const useAuthStore = create<AuthState>()(
           throw new Error('Please enter both your email/phone and password.');
         }
 
-        // 1. Check if Super Administrator login
-        const isAdmin = (inputKey === 'admin@ilertihealth.site' || inputKey === 'admin') && (inputPass === 'ILERTI-ADMIN-2025' || inputPass === 'admin');
-        if (isAdmin) {
-          const adminUser: User = {
-            id: 'admin-master',
-            name: 'System Administrator',
-            email: 'admin@ilertihealth.site',
-            role: 'admin',
-            isAvailable: true,
-          };
-          set({ user: adminUser, token: `admin-token-${Date.now()}`, isAuthenticated: true, pendingEmailOrPhone: null });
-          return adminUser;
-        }
+        // All logins are handled by the authoritative server database API
 
         // 2. Authoritative Server Database API Login
         try {
           const data = await api.auth.login({ email: inputKey, password: inputPass });
+
+          // Handle unverified account — server returns 403 with requiresVerification
+          if (data?.requiresVerification) {
+            set({ 
+              pendingEmailOrPhone: data.email || inputKey, 
+              isAuthenticated: false,
+              user: {
+                id: 'pending-verification',
+                name: 'Pending Verification',
+                email: data.email || inputKey,
+                role: 'patient',
+              },
+            });
+            const err = new Error(data.message || 'Account not verified. Please enter your OTP.');
+            (err as any).requiresVerification = true;
+            (err as any).email = data.email || inputKey;
+            throw err;
+          }
+
           if (data && data.user) {
             const isDoctor = (data.user.role || '').toUpperCase() === 'DOCTOR' || Boolean(data.user.doctor);
             const userRole: User['role'] = isDoctor ? 'doctor' : (data.user.role?.toLowerCase() as any) || 'patient';
@@ -109,6 +116,10 @@ export const useAuthStore = create<AuthState>()(
           }
           throw new Error('This account does not exist in the database. Please create an account to sign in.');
         } catch (apiErr: any) {
+          // Re-throw verification errors with metadata intact
+          if (apiErr?.requiresVerification) {
+            throw apiErr;
+          }
           const errMsg = apiErr?.message || 'Login failed. Please verify your credentials or register an account.';
           throw new Error(errMsg);
         }
@@ -199,7 +210,7 @@ export const useAuthStore = create<AuthState>()(
           user: newUser,
           token: serverResponse.access_token || `token-${Date.now()}`,
           isAuthenticated: false, // Must verify OTP in real time
-          tempOtp: null,
+          tempOtp: serverResponse.devOtp || null,
           pendingEmailOrPhone: email || userData.phone,
         });
 

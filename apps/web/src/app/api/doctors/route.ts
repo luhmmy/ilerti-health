@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { serverDb } from '@/lib/serverDb';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function GET(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`doctors_${clientIp}`, { limit: 20, windowSeconds: 60 });
+    if (!rl.success) {
+      return NextResponse.json(
+        { message: `Too many requests. Please wait ${rl.resetSeconds} seconds.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
+      );
+    }
     const { searchParams } = new URL(req.url);
     const specialty = searchParams.get('specialty');
     const state = searchParams.get('state');

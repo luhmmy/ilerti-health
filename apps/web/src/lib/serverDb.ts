@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Pool } from 'pg';
+import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ilerti-health-super-secure-production-jwt-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET || '293b447438f9d5bae42f487156927f4495459b04e14d1e6e8bb9d7e644aed029';
 
 export interface ServerUser {
   id: string;
@@ -172,6 +173,27 @@ async function ensureTables() {
         payment_reference VARCHAR(255),
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+
+      ALTER TABLE ilerti_users ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE ilerti_doctors ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE ilerti_otps ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE ilerti_consultations ENABLE ROW LEVEL SECURITY;
+
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ilerti_users' AND policyname = 'service_role_all') THEN
+          CREATE POLICY service_role_all ON ilerti_users FOR ALL TO authenticated, service_role, postgres USING (true) WITH CHECK (true);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ilerti_doctors' AND policyname = 'service_role_all') THEN
+          CREATE POLICY service_role_all ON ilerti_doctors FOR ALL TO authenticated, service_role, postgres USING (true) WITH CHECK (true);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ilerti_otps' AND policyname = 'service_role_all') THEN
+          CREATE POLICY service_role_all ON ilerti_otps FOR ALL TO authenticated, service_role, postgres USING (true) WITH CHECK (true);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ilerti_consultations' AND policyname = 'service_role_all') THEN
+          CREATE POLICY service_role_all ON ilerti_consultations FOR ALL TO authenticated, service_role, postgres USING (true) WITH CHECK (true);
+        END IF;
+      END $$;
     `);
     tablesInitialized = true;
   } catch (err) {

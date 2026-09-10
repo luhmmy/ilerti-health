@@ -6,14 +6,16 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Stethoscope, User, Lock, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
-
+import { Stethoscope, User, Lock, Mail, Eye, EyeOff, ArrowRight, BriefcaseMedical } from "lucide-react";
+import { api } from "@/lib/api";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { PRACTITIONER_DOMAINS } from "@/lib/constants/practitionerDomains";
 
 export default function LoginPage() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [isDoctorTab, setIsDoctorTab] = useState(false);
+  const [isPractitionerTab, setIsPractitionerTab] = useState(false);
+  const [practitionerDomain, setPractitionerDomain] = useState("medical_doctor");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -33,11 +35,11 @@ export default function LoginPage() {
         emailOrPhone: emailOrPhone.trim().toLowerCase(),
         email: emailOrPhone.trim().toLowerCase(),
         password,
-        role: isDoctorTab ? "doctor" : undefined,
+        role: isPractitionerTab ? "doctor" : undefined,
       });
 
       if (authenticatedUser.role === "doctor") {
-        toast.success(`Welcome back, ${authenticatedUser.name}! Opening Doctor Clinical Portal...`);
+        toast.success(`Welcome back, ${authenticatedUser.name}! Opening Clinical Portal...`);
         router.push("/doctor-portal");
       } else if (authenticatedUser.role === "admin") {
         toast.success("Welcome Administrator! Opening Admin Console...");
@@ -47,6 +49,22 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } catch (error: any) {
+      // If account exists but is unverified, redirect to OTP verification page
+      if (error?.requiresVerification) {
+        toast.info("Your account needs verification. Redirecting to enter your OTP code...");
+        // Auto-resend a fresh OTP
+        try {
+          const res = await api.auth.resendOtp({ emailOrPhone: error.email || emailOrPhone.trim().toLowerCase() });
+          if (res?.devOtp) {
+            useAuthStore.getState().setTempOtp(res.devOtp);
+          }
+          toast.success("A new verification code has been dispatched!");
+        } catch {
+          // Silently continue — OTP may have been sent previously
+        }
+        router.push("/verify");
+        return;
+      }
       const msg = error?.message || "Failed to sign in. Please verify your credentials.";
       toast.error(msg);
     } finally {
@@ -58,46 +76,79 @@ export default function LoginPage() {
     <div className="w-full bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
       <div className="text-center mb-6">
         <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-teal-100">
-          {isDoctorTab ? <Stethoscope className="w-6 h-6" /> : <User className="w-6 h-6" />}
+          {isPractitionerTab ? <Stethoscope className="w-6 h-6" /> : <User className="w-6 h-6" />}
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#1E3A5F] font-heading">
-          {isDoctorTab ? "Doctor Portal Sign In" : "Sign In to ILERTI"}
+          {isPractitionerTab ? "Health Practitioner Sign In" : "Sign In to ILERTI"}
         </h1>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">
-          {isDoctorTab
-            ? "Access your MDCN clinical workbench, consultations, and e-prescriptions."
+          {isPractitionerTab
+            ? "Access your clinical workbench, consultations, and professional dashboard."
             : "Manage your personalized health journey, records, and consultations."}
         </p>
       </div>
 
       {/* Portal Toggle */}
-      <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6">
+      <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-4">
         <button
           type="button"
-          onClick={() => setIsDoctorTab(false)}
+          onClick={() => setIsPractitionerTab(false)}
           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            !isDoctorTab ? "bg-white text-teal-700 shadow-xs" : "text-slate-500 hover:text-slate-700"
+            !isPractitionerTab ? "bg-white text-teal-700 shadow-xs" : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <User className="w-3.5 h-3.5" /> Patient Login
         </button>
         <button
           type="button"
-          onClick={() => setIsDoctorTab(true)}
+          onClick={() => setIsPractitionerTab(true)}
           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            isDoctorTab ? "bg-white text-teal-700 shadow-xs" : "text-slate-500 hover:text-slate-700"
+            isPractitionerTab ? "bg-white text-teal-700 shadow-xs" : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          <Stethoscope className="w-3.5 h-3.5" /> Doctor Portal
+          <Stethoscope className="w-3.5 h-3.5" /> Health Practitioner
         </button>
       </div>
+
+      {/* Practitioner Domain Selection (Prominent Card) */}
+      {isPractitionerTab && (
+        <div className="mb-5 p-4 bg-teal-50/60 border-2 border-teal-200/80 rounded-2xl space-y-2 transition-all">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
+              <BriefcaseMedical className="w-4 h-4 text-teal-600" />
+              Select Health Sector Field / Domain *
+            </label>
+            <span className="text-[11px] font-semibold text-teal-700 bg-teal-100/80 px-2 py-0.5 rounded-full">
+              Accredited Practice
+            </span>
+          </div>
+          <p className="text-[12px] text-slate-600 leading-snug">
+            Choose your certified medical, pharmaceutical, nursing, therapeutic, or health science field:
+          </p>
+          <select
+            value={practitionerDomain}
+            onChange={(e) => setPractitionerDomain(e.target.value)}
+            className="w-full px-3.5 py-3 text-sm font-medium border border-teal-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white text-slate-800 shadow-xs cursor-pointer"
+          >
+            {PRACTITIONER_DOMAINS.map((group) => (
+              <optgroup key={group.group} label={group.group} className="font-bold text-teal-800">
+                {group.domains.map((d) => (
+                  <option key={d.value} value={d.value} className="font-normal text-slate-800 py-1">
+                    {d.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Google Sign In Option */}
       <div className="mb-5">
         <GoogleSignInButton 
-          isDoctor={isDoctorTab} 
-          role={isDoctorTab ? "doctor" : "patient"}
-          label={isDoctorTab ? "Sign in as Doctor with Google" : "Sign in with Google"} 
+          isDoctor={isPractitionerTab} 
+          role={isPractitionerTab ? "doctor" : "patient"}
+          label={isPractitionerTab ? "Sign in as Health Practitioner with Google" : "Sign in with Google"} 
         />
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
@@ -114,7 +165,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            {isDoctorTab ? "Doctor Email Address *" : "Email Address or Phone *"}
+            {isPractitionerTab ? "Professional Email Address *" : "Email Address or Phone *"}
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -122,7 +173,7 @@ export default function LoginPage() {
               type="text"
               value={emailOrPhone}
               onChange={(e) => setEmailOrPhone(e.target.value)}
-              placeholder={isDoctorTab ? "doctor@hospital.gov.ng" : "name@example.com or 08012345678"}
+              placeholder={isPractitionerTab ? "practitioner@hospital.gov.ng" : "name@example.com or 08012345678"}
               className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
               required
             />
@@ -164,7 +215,7 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full py-3 text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
         >
-          {loading ? "Verifying credentials..." : isDoctorTab ? "Enter Doctor Portal" : "Sign In"}
+          {loading ? "Verifying credentials..." : isPractitionerTab ? "Enter Practitioner Portal" : "Sign In"}
           <ArrowRight className="w-4 h-4" />
         </Button>
       </form>

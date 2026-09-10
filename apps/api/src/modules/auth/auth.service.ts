@@ -180,7 +180,6 @@ export class AuthService {
         emailVerified: user.emailVerified,
       },
       otpSent: true,
-      verificationCode: otp, // Returned for instant real-time notification
     };
   }
 
@@ -192,7 +191,7 @@ export class AuthService {
     const key = data.emailOrPhone.toLowerCase().trim();
     const stored = otpStore.get(key);
 
-    const isValid = (stored && stored.otp === data.otp.trim() && stored.expiresAt > Date.now()) || data.otp.trim() === '123456';
+    const isValid = stored && stored.otp === data.otp.trim() && stored.expiresAt > Date.now();
 
     if (!isValid) {
       throw new BadRequestException('Invalid or expired verification code. Please try again or request a new code.');
@@ -250,7 +249,6 @@ export class AuthService {
     return { 
       success: true, 
       message: 'New verification code sent via SMS and Email.',
-      verificationCode: otp,
     };
   }
 

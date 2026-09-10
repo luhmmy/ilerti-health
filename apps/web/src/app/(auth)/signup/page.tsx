@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "../../../components/ui/button";
 import Link from "next/link";
-import { Check, X, Eye, EyeOff, ShieldCheck, User, Stethoscope } from "lucide-react";
+import { Check, X, Eye, EyeOff, ShieldCheck, User, Stethoscope, BriefcaseMedical } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { PRACTITIONER_DOMAINS } from "@/lib/constants/practitionerDomains";
 
 export default function SignupPage() {
-  const [isDoctor, setIsDoctor] = useState(false);
+  const [isPractitioner, setIsPractitioner] = useState(false);
+  const [practitionerDomain, setPractitionerDomain] = useState("medical_doctor");
   
   // Names & Contact
   const [firstName, setFirstName] = useState("");
@@ -24,7 +26,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  // Doctor specific fields
+  // Practitioner specific fields
   const [mdcnFolio, setMdcnFolio] = useState("");
   const [primarySpecialty, setPrimarySpecialty] = useState("General Practice");
   const [hospitalAffiliation, setHospitalAffiliation] = useState("");
@@ -74,8 +76,9 @@ export default function SignupPage() {
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password,
-        role: isDoctor ? "DOCTOR" : "PATIENT",
-        isDoctor,
+        role: isPractitioner ? "DOCTOR" : "PATIENT",
+        isDoctor: isPractitioner,
+        practitionerDomain,
         mdcnFolio: mdcnFolio.trim(),
         primarySpecialty,
         hospitalAffiliation: hospitalAffiliation.trim(),
@@ -86,7 +89,7 @@ export default function SignupPage() {
         bio: bio.trim(),
       });
 
-      toast.success("Account created! Verification code sent to your phone and email.");
+      toast.success("Account created! Verification code sent to your email.");
       router.push("/verify");
     } catch (error: any) {
       const msg = error?.message || "Failed to create account. Please check your details.";
@@ -108,33 +111,66 @@ export default function SignupPage() {
       </div>
       
       {/* Role Selection Tabs */}
-      <div className="flex gap-2 mb-6 bg-slate-100 p-1.5 rounded-2xl">
+      <div className="flex gap-2 mb-4 bg-slate-100 p-1.5 rounded-2xl">
         <button
           type="button"
-          onClick={() => setIsDoctor(false)}
+          onClick={() => setIsPractitioner(false)}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
-            !isDoctor ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            !isPractitioner ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <User className="w-4 h-4" /> Patient
         </button>
         <button
           type="button"
-          onClick={() => setIsDoctor(true)}
+          onClick={() => setIsPractitioner(true)}
           className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
-            isDoctor ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            isPractitioner ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          <Stethoscope className="w-4 h-4" /> MDCN Doctor
+          <Stethoscope className="w-4 h-4" /> Health Practitioner
         </button>
       </div>
+
+      {/* Practitioner Domain Selection (Prominent Card) */}
+      {isPractitioner && (
+        <div className="mb-5 p-4 bg-teal-50/60 border-2 border-teal-200/80 rounded-2xl space-y-2 transition-all">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
+              <BriefcaseMedical className="w-4 h-4 text-teal-600" />
+              Select Health Sector Field / Domain *
+            </label>
+            <span className="text-[11px] font-semibold text-teal-700 bg-teal-100/80 px-2 py-0.5 rounded-full">
+              Accredited Practice
+            </span>
+          </div>
+          <p className="text-[12px] text-slate-600 leading-snug">
+            Choose your certified medical, pharmaceutical, nursing, therapeutic, or health science field:
+          </p>
+          <select
+            value={practitionerDomain}
+            onChange={(e) => setPractitionerDomain(e.target.value)}
+            className="w-full px-3.5 py-3 text-sm font-medium border border-teal-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white text-slate-800 shadow-xs cursor-pointer"
+          >
+            {PRACTITIONER_DOMAINS.map((group) => (
+              <optgroup key={group.group} label={group.group} className="font-bold text-teal-800">
+                {group.domains.map((d) => (
+                  <option key={d.value} value={d.value} className="font-normal text-slate-800 py-1">
+                    {d.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Google Sign Up Option */}
       <div className="mb-5">
         <GoogleSignInButton 
-          isDoctor={isDoctor} 
-          role={isDoctor ? "doctor" : "patient"}
-          label={isDoctor ? "Sign up as Doctor with Google" : "Sign up with Google"} 
+          isDoctor={isPractitioner} 
+          role={isPractitioner ? "doctor" : "patient"}
+          label={isPractitioner ? "Sign up as Health Practitioner with Google" : "Sign up with Google"} 
         />
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
@@ -200,20 +236,22 @@ export default function SignupPage() {
           </div>
         </div>
 
-        {/* Doctor Specific Fields */}
-        {isDoctor && (
+        {/* Practitioner Specific Fields */}
+        {isPractitioner && (
           <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-100 space-y-3">
             <span className="text-xs font-bold text-teal-800 uppercase tracking-wider block">
-              Medical & Dental Council (MDCN) Verification
+              Professional Verification Details
             </span>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">MDCN Folio Number *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Professional License / Registration / Council Folio Number *
+              </label>
               <input
                 type="text"
                 value={mdcnFolio}
                 onChange={(e) => setMdcnFolio(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm bg-white border border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none"
-                placeholder="MDCN/2021/89402"
+                placeholder="e.g. MDCN/2021/89402, PCN/9821, NMCN/6710, MLSCN/4102"
                 required
               />
             </div>
@@ -372,7 +410,7 @@ export default function SignupPage() {
           className="w-full py-5 text-base font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-md transition-all mt-2"
           disabled={loading}
         >
-          {loading ? "Creating secure account..." : isDoctor ? "Register as MDCN Doctor" : "Create Patient Account"}
+          {loading ? "Creating secure account..." : isPractitioner ? "Register as Health Practitioner" : "Create Patient Account"}
         </Button>
       </form>
       

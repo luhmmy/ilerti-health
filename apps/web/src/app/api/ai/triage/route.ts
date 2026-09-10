@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`triage_${clientIp}`, { limit: 5, windowSeconds: 60 });
+    if (!rl.success) {
+      return NextResponse.json(
+        { message: `Too many requests. Please wait ${rl.resetSeconds} seconds.` },
+        { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
+      );
+    }
     const body = await req.json();
     const { symptoms, messages: incomingMessages } = body;
 

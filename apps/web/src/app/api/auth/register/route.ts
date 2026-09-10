@@ -111,7 +111,7 @@ export async function POST(req: Request) {
     }
 
     // Dispatch real SMS (Termii) and real Email (Resend)
-    await dispatchOtp(email, data.phone, otp);
+    const dispatchResult = await dispatchOtp(email, data.phone, otp);
 
     const token = serverDb.signToken({
       userId: newUser.id,
@@ -135,6 +135,7 @@ export async function POST(req: Request) {
         verificationStatus: newUser.verificationStatus,
       },
       otpSent: true,
+      devOtp: dispatchResult.isSimulated ? otp : undefined,
     });
   } catch (error: any) {
     return NextResponse.json(

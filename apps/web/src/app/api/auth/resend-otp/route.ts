@@ -43,11 +43,14 @@ export async function POST(req: Request) {
     }
 
     // Dispatch real SMS & Email
-    await dispatchOtp(email, phone, otp);
+    const dispatchResult = await dispatchOtp(email, phone, otp);
 
     return NextResponse.json({
       success: true,
-      message: 'New verification code sent via SMS and Email',
+      message: dispatchResult.isSimulated 
+        ? `Verification code generated: ${otp}` 
+        : 'New verification code sent via SMS and Email',
+      devOtp: dispatchResult.isSimulated ? otp : undefined,
     });
   } catch (error: any) {
     return NextResponse.json(

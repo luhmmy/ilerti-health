@@ -141,7 +141,6 @@ export default function SecretAdminLayout({
     }
   };
 
-  // Submit Google Authenticator MFA Verification
   const handleVerifyMfa = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
@@ -149,21 +148,14 @@ export default function SecretAdminLayout({
 
     const isValid = await verifyGoogleAuthTOTP(ADMIN_GOOGLE_AUTH_SECRET, enteredCode);
 
-    if (isValid) {
+    if (isValid && user?.role === 'admin') {
       setMfaVerified(true);
       sessionStorage.setItem("ilerti_admin_mfa_passed", "true");
       localStorage.setItem("ilerti_google_auth_linked", "true");
-      useAuthStore.setState({
-        isAuthenticated: true,
-        user: {
-          id: "admin-master",
-          name: "System Administrator",
-          email: "admin@ilertihealth.site",
-          role: "admin",
-        },
-        token: "admin-google-auth-verified-jwt-token",
-      });
       toast.success("Google Authenticator verified. Access granted to Admin Console!");
+    } else if (user?.role !== 'admin') {
+      toast.error("You must be logged in as an administrator first.");
+      router.push('/login');
     } else {
       toast.error("Invalid Google Authenticator code. Please enter the current 6-digit code from your app.");
     }
@@ -173,23 +165,15 @@ export default function SecretAdminLayout({
   // Direct Passkey Unlock
   const handlePasskeyUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPasscode === "ILERTI-ADMIN-2025" || adminPasscode.toLowerCase() === "admin") {
-      setMfaVerified(true);
-      sessionStorage.setItem("ilerti_admin_mfa_passed", "true");
-      useAuthStore.setState({
-        isAuthenticated: true,
-        user: {
-          id: "admin-master",
-          name: "System Administrator",
-          email: "admin@ilertihealth.site",
-          role: "admin",
-        },
-        token: "admin-google-auth-verified-jwt-token",
-      });
-      toast.success("Master security passkey accepted.");
-    } else {
-      toast.error("Invalid security passkey.");
+    if (user?.role !== 'admin') {
+      toast.error("You must be logged in as an administrator first.");
+      router.push('/login');
+      return;
     }
+    // Check with backend for passkey (mocked as true if they are logged in as admin)
+    setMfaVerified(true);
+    sessionStorage.setItem("ilerti_admin_mfa_passed", "true");
+    toast.success("Passkey accepted.");
   };
 
   // If MFA is not yet verified, show Google Authenticator Gate

@@ -93,13 +93,13 @@ export default function DashboardPage() {
                   <Stethoscope className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-white">MDCN Practitioner Account Active</h3>
-                  <p className="text-xs text-teal-200">Switch to the specialized Doctor Portal to manage your waiting room, consult queue, and e-prescriptions.</p>
+                  <h3 className="font-bold text-sm sm:text-base text-white">Health Practitioner Account Active</h3>
+                  <p className="text-xs text-teal-200">Switch to the specialized Practitioner Portal to manage your waiting room, consult queue, and clinical records.</p>
                 </div>
               </div>
               <Button asChild className="bg-[#0D9488] hover:bg-[#0f766e] text-white text-xs font-bold px-5 py-2.5 rounded-xl shrink-0">
                 <Link href="/doctor-portal">
-                  Open Doctor Portal <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  Open Practitioner Portal <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </Link>
               </Button>
             </div>

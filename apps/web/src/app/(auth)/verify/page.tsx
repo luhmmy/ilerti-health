@@ -10,7 +10,7 @@ import { ShieldCheck, ArrowLeft, Smartphone, Mail, ArrowRight } from 'lucide-rea
 
 export default function VerifyPage() {
   const router = useRouter();
-  const { user, setVerified, pendingEmailOrPhone } = useAuthStore();
+  const { user, setVerified, pendingEmailOrPhone, tempOtp, setTempOtp } = useAuthStore();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(59);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -106,17 +106,22 @@ export default function VerifyPage() {
     else if (channel === 'email') setIsResendingEmail(true);
 
     try {
-      await api.auth.resendOtp({
+      const res = await api.auth.resendOtp({
         emailOrPhone: user?.email || pendingEmailOrPhone || '',
       });
       setCountdown(59);
-      toast.success(
-        channel === 'sms' 
-          ? 'New SMS code dispatched to your phone number!'
-          : channel === 'email'
-          ? 'New Email verification code sent to your inbox!'
-          : 'A new 6-digit verification code was dispatched via SMS and Email.'
-      );
+      if (res?.devOtp) {
+        setTempOtp(res.devOtp);
+        toast.success(`Verification code: ${res.devOtp}`);
+      } else {
+        toast.success(
+          channel === 'sms' 
+            ? 'New SMS code dispatched to your phone number!'
+            : channel === 'email'
+            ? 'New Email verification code sent to your inbox!'
+            : 'A new 6-digit verification code was dispatched via SMS and Email.'
+        );
+      }
     } catch (err: any) {
       toast.error(err?.message || 'Could not resend code. Please try again.');
     } finally {
@@ -158,6 +163,30 @@ export default function VerifyPage() {
       </div>
 
       <div className="space-y-6">
+        {/* Test/Dev OTP Helper Banner */}
+        {tempOtp && (
+          <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-2xl flex items-center justify-between gap-3 text-xs">
+            <div>
+              <span className="font-semibold text-teal-800">Verification Code:</span>{' '}
+              <code className="bg-white border border-teal-200 px-2 py-0.5 rounded-lg font-mono font-bold text-teal-700 text-sm tracking-wider">
+                {tempOtp}
+              </code>
+              <p className="text-[11px] text-teal-600 mt-0.5">Live SMS/Email gateway in simulated mode</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const digits = tempOtp.slice(0, 6).split('');
+                setOtp(digits);
+                handleVerify(tempOtp);
+              }}
+              className="px-3 py-1.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
+            >
+              Auto-fill &amp; Verify
+            </button>
+          </div>
+        )}
+
         {/* Empty 6-Digit OTP Boxes */}
         <div 
           onPaste={handlePaste}

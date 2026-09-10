@@ -24,9 +24,8 @@ export async function POST(req: Request) {
         { status: 429, headers: { 'Retry-After': String(rl.resetSeconds) } }
       );
     }
-
     const storedOtp = await serverDb.getOtp(key);
-    const isValid = (storedOtp && storedOtp.code === otp && storedOtp.expiresAt > Date.now()) || otp === '123456' || otp === '892401';
+    const isValid = Boolean(storedOtp && storedOtp.code === otp && storedOtp.expiresAt > Date.now());
 
     if (!isValid) {
       return NextResponse.json(

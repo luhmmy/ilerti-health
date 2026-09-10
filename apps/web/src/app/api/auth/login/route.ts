@@ -25,7 +25,9 @@ export async function POST(req: Request) {
     }
 
     // 1. Check Super Admin login
-    const isAdmin = (inputKey === 'admin@ilertihealth.site' || inputKey === 'admin') && (inputPass === 'ILERTI-ADMIN-2025' || inputPass === 'admin');
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@ilertihealth.site';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'ILERTI-ADMIN-2025';
+    const isAdmin = (inputKey === adminEmail.toLowerCase() || inputKey === 'admin') && (inputPass === adminPassword);
     if (isAdmin) {
       const token = serverDb.signToken({
         userId: 'admin-master',

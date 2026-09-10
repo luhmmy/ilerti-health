@@ -37,6 +37,10 @@ async function fetchJson(endpoint: string, options: RequestInit = {}) {
     let errMsg = `HTTP error! status: ${res.status}`;
     try {
       const errorBody = await res.json();
+      // For 403 with requiresVerification, return the body so the caller can handle OTP redirect
+      if (res.status === 403 && errorBody.requiresVerification) {
+        return errorBody;
+      }
       errMsg = errorBody.message || errorBody.error || errMsg;
     } catch {
       try {
