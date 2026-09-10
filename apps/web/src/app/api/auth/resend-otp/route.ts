@@ -45,12 +45,16 @@ export async function POST(req: Request) {
     // Dispatch real SMS & Email
     const dispatchResult = await dispatchOtp(email, phone, otp);
 
+    const isDelivered = dispatchResult.emailSent || dispatchResult.smsSent;
+
     return NextResponse.json({
       success: true,
-      message: dispatchResult.isSimulated 
-        ? `Verification code generated: ${otp}` 
-        : 'New verification code sent via SMS and Email',
-      devOtp: dispatchResult.isSimulated ? otp : undefined,
+      message: isDelivered 
+        ? 'New verification code sent to your email (check your Inbox & Spam folder)' 
+        : (dispatchResult.emailError || `Verification code generated: ${otp}`),
+      devOtp: !isDelivered || dispatchResult.isSimulated ? otp : undefined,
+      emailSent: dispatchResult.emailSent,
+      emailError: dispatchResult.emailError,
     });
   } catch (error: any) {
     return NextResponse.json(

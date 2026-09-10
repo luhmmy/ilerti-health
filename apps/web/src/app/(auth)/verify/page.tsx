@@ -160,6 +160,14 @@ export default function VerifyPage() {
             </div>
           )}
         </div>
+
+        {/* Spam Folder Tip */}
+        <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 flex items-start gap-2">
+          <span className="shrink-0 text-sm">💡</span>
+          <span className="leading-relaxed">
+            <strong>Can&apos;t find the email?</strong> Be sure to check your <strong>Spam / Junk</strong> or <strong>Promotions</strong> folder. Verification emails may land there until marked as &quot;Not Spam&quot;.
+          </span>
+        </div>
       </div>
 
       <div className="space-y-6">

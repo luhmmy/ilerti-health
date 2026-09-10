@@ -134,8 +134,10 @@ export async function POST(req: Request) {
         hospitalAffiliation: newUser.hospitalAffiliation,
         verificationStatus: newUser.verificationStatus,
       },
-      otpSent: true,
-      devOtp: dispatchResult.isSimulated ? otp : undefined,
+      otpSent: dispatchResult.emailSent || dispatchResult.smsSent,
+      devOtp: (!dispatchResult.emailSent && !dispatchResult.smsSent) || dispatchResult.isSimulated ? otp : undefined,
+      emailSent: dispatchResult.emailSent,
+      emailError: dispatchResult.emailError,
     });
   } catch (error: any) {
     return NextResponse.json(
