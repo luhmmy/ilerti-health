@@ -13,6 +13,7 @@ export const PRACTITIONER_DOMAINS: PractitionerDomainGroup[] = [
     group: "Medical & Surgical Practice",
     domains: [
       { value: "medical_doctor", label: "Medical Doctor / General Practitioner (MBBS/MBChB)" },
+      { value: "dermatologist", label: "Dermatologist (Skin, Hair & Nail Specialist)" },
       { value: "specialist_physician", label: "Specialist Physician / Consultant (Internal Med, Paediatrics, etc.)" },
       { value: "surgeon", label: "General / Specialist Surgeon" },
       { value: "psychiatrist", label: "Psychiatrist" },
